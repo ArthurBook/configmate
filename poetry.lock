@@ -658,6 +658,18 @@ files = [
 ]
 
 [[package]]
+name = "toml"
+version = "0.10.2"
+description = "Python Library for Tom's Obvious, Minimal Language"
+category = "main"
+optional = true
+python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
+files = [
+    {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
+    {file = "toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"},
+]
+
+[[package]]
 name = "tomli"
 version = "2.0.1"
 description = "A lil' TOML parser"
@@ -841,9 +853,10 @@ files = [
 
 [extras]
 pydantic = ["pydantic"]
+toml = ["toml"]
 yaml = ["pyyaml"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8, <3.12"
-content-hash = "d7338c019178245f9c7b2a53825ed01c1c8c8e766719a8d0615d1d012929908f"
+content-hash = "0407d623b59c2a8a667ea78b6c4590b33bc68d689cb998dd1de01f796412e449"

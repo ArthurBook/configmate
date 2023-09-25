@@ -5,7 +5,7 @@ import re
 from typing import Dict, Union
 
 
-### Configuration ###
+### Source ###
 @dataclasses.dataclass
 class SourceConfig:
     path: Union[str, os.PathLike]

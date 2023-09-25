@@ -1,4 +1,3 @@
-import os
 import re
 from typing import Dict
 from unittest import mock

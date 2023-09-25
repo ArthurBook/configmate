@@ -68,6 +68,6 @@ def handle_unfilled_variables(
     if config.handling is configuration_base.EnvVarMode.RAISE_MISSING:
         raise exceptions.UnfilledEnvironmentVariableError(unfilled_vars)
     if config.handling is configuration_base.EnvVarMode.LOG_MISSING:
-        logger.warn(f"Following environment variables not found: {unfilled_vars}")
+        logger.warning("Following environment variables not found: %s", unfilled_vars)
     if config.handling is configuration_base.EnvVarMode.WARN_MISSING:
         warnings.warn(f"Following environment variables not found: {unfilled_vars}")
