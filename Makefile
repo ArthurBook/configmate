@@ -1,4 +1,4 @@
-.PHONY: install test lint typecheck format clean
+.PHONY: setup test lint typecheck format tox
 
 setup:
 	poetry install --all-extras
