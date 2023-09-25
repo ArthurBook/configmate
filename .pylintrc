@@ -5,5 +5,3 @@ disable=
 
 [MESSAGES CONTROL]
 disable=
-    C0330,
-    C0326

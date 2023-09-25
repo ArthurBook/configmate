@@ -17,22 +17,22 @@ from configmate.utils import envvar_utils
             {"HOME": "/user/home"},
             re.compile(r"\$(\w+)"),
             configuration_base.EnvVarMode.IGNORE_MISSING,
-            "$HOME is home",
-            "/user/home is home",
+            "$HOME is where i live",
+            "/user/home is where i live",
         ),
         (
-            None,
+            {},
             re.compile(r"\$(\w+)"),
             configuration_base.EnvVarMode.IGNORE_MISSING,
-            "$UNKNOWN is unknown",
-            "$UNKNOWN is unknown",
+            "$UNKNOWN to the unknown",
+            "$UNKNOWN to the unknown",
         ),
         (
-            None,
+            {},
             re.compile(r"\$(\w+)"),
             configuration_base.EnvVarMode.FILL_WITH_BLANK,
-            "$UNKNOWN is unknown",
-            " is unknown",
+            "$UNKNOWN to the unknown",
+            " to the unknown",
         ),
         (
             {"USER_NAME": "John"},
@@ -42,11 +42,39 @@ from configmate.utils import envvar_utils
             "John is John",
         ),
         (
+            {"USER NAME": "John"},
+            envvar_config_templates.UNIX_ENV_PATTERN,
+            configuration_base.EnvVarMode.IGNORE_MISSING,
+            "$USER NAME is John",
+            "$USER NAME is John",
+        ),
+        (  # Commented out lines should not be replaced
             {"USER_NAME": "John"},
             envvar_config_templates.UNIX_ENV_PATTERN,
             configuration_base.EnvVarMode.RAISE_MISSING,
-            "#$USER_NAME is John",  # Commented out lines should not be replaced
             "#$USER_NAME is John",
+            "#$USER_NAME is John",
+        ),
+        (  # Commented out lines should not be replaced
+            {"USER_NAME": "John"},
+            envvar_config_templates.UNIX_ENV_PATTERN,
+            configuration_base.EnvVarMode.RAISE_MISSING,
+            "bla bla bla # $USER_NAME is John",
+            "bla bla bla # $USER_NAME is John",
+        ),
+        (  # Before comment should be replaced
+            {"USER_NAME": "John"},
+            envvar_config_templates.UNIX_ENV_PATTERN,
+            configuration_base.EnvVarMode.RAISE_MISSING,
+            "$USER_NAME # is John",
+            "John # is John",
+        ),
+        (  # Commented out lines should not be replaced if its with //
+            {"USER_NAME": "John"},
+            envvar_config_templates.UNIX_ENV_PATTERN,
+            configuration_base.EnvVarMode.RAISE_MISSING,
+            "// $USER_NAME is John",
+            "// $USER_NAME is John",
         ),
         (
             {"COMPUTERNAME": "MyPC"},
@@ -54,6 +82,13 @@ from configmate.utils import envvar_utils
             configuration_base.EnvVarMode.IGNORE_MISSING,
             "%COMPUTERNAME% is MyPC",
             "MyPC is MyPC",
+        ),
+        (
+            {"COMPUTER NAME": "Batman"},
+            envvar_config_templates.WINDOWS_ENV_PATTERN,
+            configuration_base.EnvVarMode.RAISE_MISSING,
+            "%COMPUTER NAME%",
+            "%COMPUTER NAME%",
         ),
     ],
 )
@@ -64,20 +99,13 @@ def test_replace_env_variables(
     input_str: str,
     expected: str,
 ) -> None:
-    with mock.patch.dict("os.environ", env or {}):
+    with mock.patch.dict("os.environ", env, clear=True):
         config = configuration_base.EnvironmentVariableHandlingConfig(
             env_var_pattern=pattern,
             defaults={},
             handling=config_handling,
         )
-        if (
-            config_handling is configuration_base.EnvVarMode.RAISE_MISSING
-            and env is None
-        ):
-            with pytest.raises(exceptions.UnfilledEnvironmentVariableError):
-                envvar_utils.replace_env_variables(input_str, config)
-        else:
-            assert envvar_utils.replace_env_variables(input_str, config) == expected
+        assert envvar_utils.replace_env_variables(input_str, config) == expected
 
 
 @pytest.mark.parametrize(
@@ -88,18 +116,6 @@ def test_replace_env_variables(
             re.compile(r"\$(\w+)"),
             configuration_base.EnvVarMode.RAISE_MISSING,
             "$UNKNOWN",
-        ),
-        (
-            None,
-            envvar_config_templates.UNIX_ENV_PATTERN,
-            configuration_base.EnvVarMode.RAISE_MISSING,
-            "$USER_NAME",
-        ),
-        (
-            None,
-            envvar_config_templates.WINDOWS_ENV_PATTERN,
-            configuration_base.EnvVarMode.RAISE_MISSING,
-            "%COMPUTERNAME%",
         ),
         (
             {"USER": "John"},

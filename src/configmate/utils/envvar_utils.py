@@ -1,9 +1,10 @@
 import collections
+import logging
 import os
 import re
-from typing import Iterable, Mapping, Optional, Set, Union
 import warnings
-import logging
+from typing import Iterable, Mapping, Optional, Set
+
 from configmate import exceptions
 from configmate.configuration import configuration_base
 
