@@ -8,7 +8,7 @@ class BaseParser(abc.ABC):
         ...
 
 
-class BaseConfigParser(BaseParser):
+class BaseConfigParser(BaseParser, abc.ABC):
     def parse(self, data: str) -> Mapping[str, Any]:
         parsed_data = self._parse(data)
         self.validate_parsed_data(parsed_data)
