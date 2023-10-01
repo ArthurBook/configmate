@@ -6,12 +6,12 @@ else:
     _HAS_YAML_EXTENSION_INSTALLED = True
 
 import abc
-from typing import Any
+from typing import Any, Set
 from configmate import exceptions
 from configmate.parsing import base_parser
 
 
-class YamlParserBase(base_parser.BaseConfigParser, abc.ABC):
+class YamlParserBase(abc.ABC):
     def __init__(self) -> None:
         if not _HAS_YAML_EXTENSION_INSTALLED:
             raise exceptions.NeedsExtension(
@@ -29,11 +29,16 @@ class YamlParserBase(base_parser.BaseConfigParser, abc.ABC):
         ...
 
 
-class YamlSafeLoadParser(YamlParserBase):
+class YamlSafeLoadParser(YamlParserBase, base_parser.InferableConfigParser):
     def _parse_yaml(self, data: str) -> Any:
         return yaml.safe_load(data)
 
+    @classmethod
+    def supported_file_extensions(cls) -> Set[str]:
+        return {".yaml", ".yml"}
 
-class YamlUnSafeLoadParser(YamlParserBase):
+
+# dont infer this parser
+class YamlUnSafeLoadParser(YamlParserBase, base_parser.BaseConfigParser):
     def _parse_yaml(self, data: str) -> Any:
         return yaml.full_load(data)
