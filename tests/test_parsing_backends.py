@@ -1,8 +1,6 @@
 from configparser import ConfigParser
 import contextlib
-import copy
 import importlib
-import sys
 from types import ModuleType
 from typing import Callable
 from unittest import mock
@@ -103,10 +101,16 @@ def test_xml_parser():
 def run_with_removed_module(dependency: str, module: ModuleType):
     try:
         with mock.patch.dict("sys.modules", {dependency: None}):
-            importlib.reload(module)
-            yield
+            with mock.patch.dict(
+                base_parser.InferableConfigParser.__registry__, clear=True
+            ):
+                importlib.reload(module)
+                yield
     finally:  # Restore the state of the module
-        importlib.reload(module)
+        with mock.patch.dict(
+            base_parser.InferableConfigParser.__registry__, clear=True
+        ):
+            importlib.reload(module)
 
 
 @pytest.mark.parametrize(
