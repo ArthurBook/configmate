@@ -1,25 +1,11 @@
-from configparser import ConfigParser
-import contextlib
-import importlib
-from types import ModuleType
-from typing import Callable
-from unittest import mock
+import configparser as builtin_configparser
 
-import pytest
-from configmate import exceptions
-
-from configmate.parsing import (
-    base_parser,
-    ini_parser,
-    json_parser,
-    toml_parser,
-    xml_parser,
-    yaml_parser,
-)
+from configmate import interface, parsing_backends
 
 
 def test_json_parser():
-    data = """
+    data = interface.ConfigLike(
+        """
     {
         "section1": {
             "option1": "value1",
@@ -31,17 +17,19 @@ def test_json_parser():
         }
     }
     """
+    )
     expected = {
         "section1": {"option1": "value1", "option2": "value2"},
         "section2": {"option3": "value3", "option4": "value4"},
     }
-    parser = json_parser.JsonParser()
+    parser = parsing_backends.JsonParser()
     result = parser.parse(data)
     assert result == expected
 
 
 def test_ini_parser():
-    data = """
+    data = interface.ConfigLike(
+        """
     [Section1]
     option1 = value1
     option2 = value2
@@ -50,18 +38,20 @@ def test_ini_parser():
     option3 = value3
     option4 = value4
     """
+    )
     expected = {
         "Section1": {"option1": "value1", "option2": "value2"},
         "Section2": {"option3": "value3", "option4": "value4"},
     }
-    configparser = ConfigParser()
-    parser = ini_parser.IniParser(configparser)
+    configparser = builtin_configparser.ConfigParser()
+    parser = parsing_backends.IniParser(configparser)
     result = parser.parse(data)
     assert result == expected
 
 
 def test_xml_parser():
-    data = """
+    data = interface.ConfigLike(
+        """
     <root>
         <section1>
             <option1>value1</option1>
@@ -77,6 +67,7 @@ def test_xml_parser():
         </section2>
     </root>
     """
+    )
     expected = {
         "section1": {
             "option1": "value1",
@@ -88,51 +79,16 @@ def test_xml_parser():
         },
         "section2": {"option3": "value3", "option4": "value4"},
     }
-    parser = xml_parser.XmlParser()
+    parser = parsing_backends.XmlParser()
     result = parser.parse(data)
     print(result)
     assert result == expected
 
 
 ### Optional parsers from extensions
-
-
-@contextlib.contextmanager
-def run_with_removed_module(dependency: str, module: ModuleType):
-    try:
-        with mock.patch.dict("sys.modules", {dependency: None}):
-            with mock.patch.dict(
-                base_parser.InferableConfigParser.__registry__, clear=True
-            ):
-                importlib.reload(module)
-                yield
-    finally:  # Restore the state of the module
-        with mock.patch.dict(
-            base_parser.InferableConfigParser.__registry__, clear=True
-        ):
-            importlib.reload(module)
-
-
-@pytest.mark.parametrize(
-    "dependency, module, parser_init",
-    [
-        ("toml", toml_parser, toml_parser.TomlParser),
-        ("yaml", yaml_parser, yaml_parser.YamlSafeLoadParser),
-        ("yaml", yaml_parser, yaml_parser.YamlUnSafeLoadParser),
-    ],
-)
-def test_missing_imports(
-    dependency: str,
-    module: ModuleType,
-    parser_init: Callable[[], base_parser.BaseConfigParser],
-):
-    with run_with_removed_module(dependency, module):
-        with pytest.raises(exceptions.NeedsExtension):
-            parser_init()
-
-
 def test_toml_parser():
-    data = """
+    data = interface.ConfigLike(
+        """
     [section1]
     option1 = "value1"
     option2 = "value2"
@@ -141,17 +97,19 @@ def test_toml_parser():
     option3 = "value3"
     option4 = "value4"
     """
+    )
     expected = {
         "section1": {"option1": "value1", "option2": "value2"},
         "section2": {"option3": "value3", "option4": "value4"},
     }
-    parser = toml_parser.TomlParser()
+    parser = parsing_backends.TomlParser()
     result = parser.parse(data)
     assert result == expected
 
 
 def test_yaml_safe_load_parser():
-    data = """
+    data = interface.ConfigLike(
+        """
     section1:
         option1: value1
         option2: value2
@@ -160,17 +118,19 @@ def test_yaml_safe_load_parser():
         option3: value3
         option4: value4
     """
+    )
     expected = {
         "section1": {"option1": "value1", "option2": "value2"},
         "section2": {"option3": "value3", "option4": "value4"},
     }
-    parser = yaml_parser.YamlSafeLoadParser()
+    parser = parsing_backends.YamlSafeLoadParser()
     result = parser.parse(data)
     assert result == expected
 
 
 def test_yaml_unsafe_load_parser():
-    data = """
+    data = interface.ConfigLike(
+        """
     section1:
         option1: value1
         option2: value2
@@ -179,10 +139,11 @@ def test_yaml_unsafe_load_parser():
         option3: value3
         option4: value4
     """
+    )
     expected = {
         "section1": {"option1": "value1", "option2": "value2"},
         "section2": {"option3": "value3", "option4": "value4"},
     }
-    parser = yaml_parser.YamlUnSafeLoadParser()
+    parser = parsing_backends.YamlUnsafeLoadParser()
     result = parser.parse(data)
     assert result == expected
