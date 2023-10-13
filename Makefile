@@ -17,3 +17,6 @@ format:
 
 tox:
 	poetry run tox
+
+linecount:
+	find src/configmate/ -name '*.py' -exec wc -l {} +
