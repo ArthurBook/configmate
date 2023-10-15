@@ -132,9 +132,3 @@ def compile_prefix_regex(prefix: str) -> re.Pattern:
     escaped_prefix = re.escape(prefix)
     return re.compile(f"^{escaped_prefix}[^{escaped_prefix}]")
 
-
-section = CliSectionFinder.default()
-overlay_parser = CliOverlayParser.from_prefix()
-override_parser = CliOverrideParser.from_tokens("+", ".")
-print(list(overlay_parser.read_config(section)))
-print(list(override_parser.read_config(section)))
