@@ -5,8 +5,7 @@ from unittest import mock
 import pytest
 
 from configmate import exceptions
-from configmate.configuration import envvar_config
-from configmate.interpolation import env_interpolator
+from configmate import env_interpolator
 
 
 @pytest.mark.parametrize(
@@ -15,91 +14,84 @@ from configmate.interpolation import env_interpolator
         (
             {"HOME": "/user/home"},
             re.compile(r"\$(\w+)"),
-            envvar_config.EnvVarMode.IGNORE_MISSING,
+            env_interpolator.MissingEnvVarHandling.IGNORE,
             "$HOME is where i live",
             "/user/home is where i live",
         ),
         (
             {},
             re.compile(r"\$(\w+)"),
-            envvar_config.EnvVarMode.IGNORE_MISSING,
+            env_interpolator.MissingEnvVarHandling.IGNORE,
             "$UNKNOWN to the unknown",
             "$UNKNOWN to the unknown",
-        ),
-        (
-            {},
-            re.compile(r"\$(\w+)"),
-            envvar_config.EnvVarMode.FILL_WITH_BLANK,
-            "$UNKNOWN to the unknown",
-            " to the unknown",
         ),
         (
             {"USER_NAME": "John"},
-            envvar_config.UNIX_ENV_PATTERN,
-            envvar_config.EnvVarMode.IGNORE_MISSING,
+            env_interpolator.UNIX_ENV_PATTERN,
+            env_interpolator.MissingEnvVarHandling.IGNORE,
             "$USER_NAME is John",
             "John is John",
         ),
         (
             {"$ ": "John"},
-            envvar_config.UNIX_ENV_PATTERN,
-            envvar_config.EnvVarMode.IGNORE_MISSING,
+            env_interpolator.UNIX_ENV_PATTERN,
+            env_interpolator.MissingEnvVarHandling.IGNORE,
             "100$ !!",
             "100$ !!",
         ),
         (
             {"$ ": "John"},
-            envvar_config.UNIX_ENV_PATTERN,
-            envvar_config.EnvVarMode.IGNORE_MISSING,
+            env_interpolator.UNIX_ENV_PATTERN,
+            env_interpolator.MissingEnvVarHandling.IGNORE,
             "100$ !!",
             "100$ !!",
         ),
         (
             {"USER NAME": "John"},
-            envvar_config.UNIX_ENV_PATTERN,
-            envvar_config.EnvVarMode.IGNORE_MISSING,
+            env_interpolator.UNIX_ENV_PATTERN,
+            env_interpolator.MissingEnvVarHandling.IGNORE,
             "$USER NAME is John",
             "$USER NAME is John",
         ),
         (  # Commented out lines should not be replaced
             {"USER_NAME": "John"},
-            envvar_config.UNIX_ENV_PATTERN,
-            envvar_config.EnvVarMode.RAISE_MISSING,
+            env_interpolator.UNIX_ENV_PATTERN,
+            env_interpolator.MissingEnvVarHandling.RAISE_EXCEPTION,
             "#$USER_NAME is John",
             "#$USER_NAME is John",
         ),
         (  # Commented out lines should not be replaced
             {"USER_NAME": "John"},
-            envvar_config.UNIX_ENV_PATTERN,
-            envvar_config.EnvVarMode.RAISE_MISSING,
+            env_interpolator.UNIX_ENV_PATTERN,
+            env_interpolator.MissingEnvVarHandling.RAISE_EXCEPTION,
             "bla bla bla # $USER_NAME is John",
             "bla bla bla # $USER_NAME is John",
         ),
         (  # Before comment should be replaced
             {"USER_NAME": "John"},
-            envvar_config.UNIX_ENV_PATTERN,
-            envvar_config.EnvVarMode.RAISE_MISSING,
+            env_interpolator.UNIX_ENV_PATTERN,
+            env_interpolator.MissingEnvVarHandling.RAISE_EXCEPTION,
             "$USER_NAME # is John",
             "John # is John",
         ),
         (  # Commented out lines should not be replaced if its with //
             {"USER_NAME": "John"},
-            envvar_config.UNIX_ENV_PATTERN,
-            envvar_config.EnvVarMode.RAISE_MISSING,
+            env_interpolator.UNIX_ENV_PATTERN,
+            env_interpolator.MissingEnvVarHandling.RAISE_EXCEPTION,
             "// $USER_NAME is John",
             "// $USER_NAME is John",
         ),
         (
             {"COMPUTERNAME": "MyPC"},
-            envvar_config.WINDOWS_ENV_PATTERN,
-            envvar_config.EnvVarMode.IGNORE_MISSING,
+            env_interpolator.WINDOWS_ENV_PATTERN,
+            env_interpolator.MissingEnvVarHandling.IGNORE,
             "%COMPUTERNAME% is MyPC",
             "MyPC is MyPC",
         ),
         (
             {"COMPUTER NAME": "Batman"},
-            envvar_config.WINDOWS_ENV_PATTERN,
-            envvar_config.EnvVarMode.RAISE_MISSING,
+            env_interpolator.WINDOWS_ENV_PATTERN,
+            env_interpolator.MissingEnvVarHandling.RAISE_EXCEPTION,
             "%COMPUTER NAME%",
             "%COMPUTER NAME%",
         ),
@@ -107,19 +99,16 @@ from configmate.interpolation import env_interpolator
 )
 def test_replace_env_variables(
     env: Dict[str, str],
-    pattern: re.Pattern[str],
-    config_handling: envvar_config.EnvVarMode,
+    pattern: re.Pattern,
+    config_handling: env_interpolator.MissingEnvVarHandling,
     input_str: str,
     expected: str,
 ) -> None:
     with mock.patch.dict("os.environ", env, clear=True):
-        config = envvar_config.EnvVarConfig(
-            env_var_pattern=pattern,
-            defaults={},
-            handling=config_handling,
-            ignore=[],
+        assert (
+            env_interpolator.expand_env_vars(input_str, pattern, config_handling)
+            == expected
         )
-        assert env_interpolator.fill_env_variables(input_str, config) == expected
 
 
 @pytest.mark.parametrize(
@@ -128,35 +117,29 @@ def test_replace_env_variables(
         (
             None,
             re.compile(r"\$(\w+)"),
-            envvar_config.EnvVarMode.RAISE_MISSING,
+            env_interpolator.MissingEnvVarHandling.RAISE_EXCEPTION,
             "$UNKNOWN",
         ),
         (
             {"USER": "John"},
-            envvar_config.UNIX_ENV_PATTERN,
-            envvar_config.EnvVarMode.RAISE_MISSING,
+            env_interpolator.UNIX_ENV_PATTERN,
+            env_interpolator.MissingEnvVarHandling.RAISE_EXCEPTION,
             "$USER_NAME",
         ),
         (
             {"COMPUTERNAME": "MyPC"},
-            envvar_config.WINDOWS_ENV_PATTERN,
-            envvar_config.EnvVarMode.RAISE_MISSING,
+            env_interpolator.WINDOWS_ENV_PATTERN,
+            env_interpolator.MissingEnvVarHandling.RAISE_EXCEPTION,
             "%USERNAME%",
         ),
     ],
 )
 def test_replace_env_variables_error_cases(
     env: Dict[str, str],
-    pattern: re.Pattern[str],
-    config_handling: envvar_config.EnvVarMode,
+    pattern: re.Pattern,
+    config_handling: env_interpolator.MissingEnvVarHandling,
     input_str: str,
 ) -> None:
     with mock.patch.dict("os.environ", env or {}):
-        config = envvar_config.EnvVarConfig(
-            env_var_pattern=pattern,
-            defaults={},
-            handling=config_handling,
-            ignore=[],
-        )
         with pytest.raises(exceptions.UnfilledEnvironmentVariableError):
-            env_interpolator.fill_env_variables(input_str, config)
+            env_interpolator.expand_env_vars(input_str, pattern, config_handling)
