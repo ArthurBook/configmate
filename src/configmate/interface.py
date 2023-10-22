@@ -1,50 +1,28 @@
 import os
-from typing import Any, Generic, Iterable, NewType, Protocol, Sequence, TypeVar, Union
+from typing import Any, Callable, Iterable, Type, TypeVar, Union
 
-# A string that is meant to be parsed to a config mapping
-PathLikeString = Union[str, os.PathLike]
-ConfigLike = NewType("ConfigLike", str)
-CliArg = str
-CliArgArray = Iterable[str]
-FileExtension = NewType("FileExtension", str)
+from typing_extensions import Annotated
 
 # Type variables
-T_contra = TypeVar("T_contra", contravariant=True)
+T = TypeVar("T")
+U = TypeVar("U")
 T_co = TypeVar("T_co", covariant=True)
+T_contra = TypeVar("T_contra", contravariant=True)
 
+# For hinting
+FilePath = Union[str, os.PathLike]
+ConfigLike = Annotated[str, "ConfigLike"]
+CliArg = str
+CliArgArray = Iterable[CliArg]
 
-### Simple interfaces
-class HasBool(Protocol):
-    def __bool__(self) -> bool:
-        ...
+## Generic interfaces
+Interpolator = Callable[[str], ConfigLike]
+Transformer = Callable[[T], U]
+Aggregator = Callable[[T], U]
+Validator = Callable[[T, Type[U]], U]
 
-
-### Low level interfaces
-class Source(Protocol, Generic[T_co]):
-    def read(self) -> T_co:
-        ...
-
-
-class ConfigReader(Protocol, Generic[T_contra, T_co]):
-    def read_config(self, source: T_contra) -> T_co:
-        ...
-
-
-class FileInterpolator(Protocol):
-    def interpolate(self, text: str) -> ConfigLike:
-        ...
-
-
-class Parser(Protocol):
-    def parse(self, text: ConfigLike) -> Any:
-        ...
-
-
-class Aggregator(Protocol):
-    def aggregate(self, items: Sequence[Any]) -> Any:
-        ...
-
-
-class Validator(Protocol):
-    def validate(self, item: Any) -> Any:
-        ...
+## Specific interfaces
+FileReader = Transformer[FilePath, ConfigLike]
+OverlayParser = Transformer[CliArgArray, Iterable[FilePath]]
+Parser = Transformer[ConfigLike, Any]
+OverrideParser = Transformer[CliArgArray, Iterable[Any]]
