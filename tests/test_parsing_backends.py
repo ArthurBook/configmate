@@ -1,6 +1,4 @@
-import configparser as builtin_configparser
-
-from configmate import interface, parsing_backends
+from configmate import interface, parsing
 
 
 def test_json_parser():
@@ -22,8 +20,7 @@ def test_json_parser():
         "section1": {"option1": "value1", "option2": "value2"},
         "section2": {"option3": "value3", "option4": "value4"},
     }
-    parser = parsing_backends.JsonParser()
-    result = parser.parse(data)
+    result = parsing.parse_json(data)
     assert result == expected
 
 
@@ -43,9 +40,7 @@ def test_ini_parser():
         "Section1": {"option1": "value1", "option2": "value2"},
         "Section2": {"option3": "value3", "option4": "value4"},
     }
-    configparser = builtin_configparser.ConfigParser()
-    parser = parsing_backends.IniParser(configparser)
-    result = parser.parse(data)
+    result = parsing.parse_ini(data)
     assert result == expected
 
 
@@ -79,8 +74,7 @@ def test_xml_parser():
         },
         "section2": {"option3": "value3", "option4": "value4"},
     }
-    parser = parsing_backends.XmlParser()
-    result = parser.parse(data)
+    result = parsing.parse_xml(data)
     print(result)
     assert result == expected
 
@@ -102,8 +96,7 @@ def test_toml_parser():
         "section1": {"option1": "value1", "option2": "value2"},
         "section2": {"option3": "value3", "option4": "value4"},
     }
-    parser = parsing_backends.TomlParser()
-    result = parser.parse(data)
+    result = parsing.parse_toml(data)
     assert result == expected
 
 
@@ -123,27 +116,5 @@ def test_yaml_safe_load_parser():
         "section1": {"option1": "value1", "option2": "value2"},
         "section2": {"option3": "value3", "option4": "value4"},
     }
-    parser = parsing_backends.YamlSafeLoadParser()
-    result = parser.parse(data)
-    assert result == expected
-
-
-def test_yaml_unsafe_load_parser():
-    data = interface.ConfigLike(
-        """
-    section1:
-        option1: value1
-        option2: value2
-
-    section2:
-        option3: value3
-        option4: value4
-    """
-    )
-    expected = {
-        "section1": {"option1": "value1", "option2": "value2"},
-        "section2": {"option3": "value3", "option4": "value4"},
-    }
-    parser = parsing_backends.YamlUnsafeLoadParser()
-    result = parser.parse(data)
+    result = parsing.parse_yaml_safe(data)
     assert result == expected
