@@ -1,17 +1,25 @@
-from typing import Any, Collection, Mapping, Sequence, Type
+from typing import Any, Callable, Collection, Generic, Mapping, Sequence, Type, TypeVar
 
 from configmate import base, exceptions
 from configmate import interface as i
 
-
-def validate(unvalidated_object: Any, target_type: Type[i.T]) -> i.T:
-    validator = ValidationStrategyRegistry.get_strategy(unvalidated_object)
-    return validator(unvalidated_object, target_type)
+T = TypeVar("T")
+ValidationStrategy = Callable[[Any, Type[T]], T]
 
 
-class ValidationStrategyRegistry(base.BaseRegistry[Type, i.Validator]):
+class Validator(Generic[T]):
+    def __init__(self, type_: Type[T]) -> None:
+        super().__init__()
+        self.type_ = type_
+
+    def __call__(self, unvalidated_object: Any) -> T:
+        strategy = ValidationStrategyRegistry.get_strategy(unvalidated_object)
+        return strategy(unvalidated_object, self.type_)
+
+
+class ValidationStrategyRegistry(base.BaseRegistry[Type[Any], ValidationStrategy]):
     @classmethod
-    def get_strategy(cls, items: Sequence[i.T]) -> i.Validator:
+    def get_strategy(cls, items: Sequence[Any]) -> ValidationStrategy:
         for _type, strategy in cls.iterate_by_priority():
             if isinstance(items, _type):
                 return strategy
