@@ -1,3 +1,5 @@
+from typing import Callable
+import pytest
 from configmate import interface, parsing
 
 
@@ -118,3 +120,20 @@ def test_yaml_safe_load_parser():
     }
     result = parsing.parse_yaml_safe(data)
     assert result == expected
+
+
+@pytest.mark.parametrize(
+    "filepath, expected_parser",
+    [
+        ("file.ini", parsing.parse_ini),
+        ("file.INI", parsing.parse_ini),
+        ("file.json", parsing.parse_json),
+        ("file.toml", parsing.parse_toml),
+        ("file.xml", parsing.parse_xml),
+        ("file.yaml", parsing.parse_yaml_safe),
+        ("file.yml", parsing.parse_yaml_safe),
+    ],
+)
+def test_infer_parser_from_filepath(filepath: str, expected_parser: Callable) -> None:
+    result = parsing.ParserRegistry.get_strategy(filepath)
+    assert result == expected_parser

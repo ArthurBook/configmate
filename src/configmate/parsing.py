@@ -1,49 +1,54 @@
 import fnmatch
-import functools
 import json
-from configparser import ConfigParser
-from typing import Any, Dict, Optional, Union
+import configparser
+import os
+from typing import Any, Callable, Dict, Optional, Union
 from xml.etree import ElementTree as etree
 
 import toml
 import yaml
 
-from configmate import base, exceptions
+from configmate import base
 from configmate import interface as i
 
 
-def parse_with_inferred_parser(config_string: i.ConfigLike, path: i.FilePath) -> Any:
-    return FileParserRegistry.from_path(path)(config_string)
+def infer_parser(path: Union[str, os.PathLike]) -> "Parser":
+    return Parser(ParserRegistry.get_strategy(path))
 
 
-class FileParserRegistry(base.BaseRegistry[str, i.Transformer[i.ConfigLike, Any]]):
-    @classmethod
-    def from_path(cls, path: i.FilePath) -> i.Transformer[i.ConfigLike, Any]:
-        matcher = functools.partial(fnmatch.fnmatch, str(path))
-        for _, parser in filter(lambda x: matcher(x[0]), cls.iterate_by_priority()):
-            return parser
-        raise exceptions.UnknownFileExtension(f"No parser for {path=}")
+class Parser(base.HasDescription):
+    def __init__(self, parse_backend: Callable[[i.ConfigLike], Any]) -> None:
+        self.parse_backend = parse_backend
+
+    def __call__(self, text: i.ConfigLike) -> Any:
+        return self.parse_backend(text)
+
+
+class ParserRegistry(base.BaseRegistry[str, i.Transformer[i.ConfigLike, Any]]):
+    @staticmethod
+    def is_valid_strategy(type_: Any, key: str) -> bool:
+        return fnmatch.fnmatch(type_, key)
 
 
 ### .INI
-@FileParserRegistry.register({"*.ini"})
-def parse_ini(text: i.ConfigLike) -> Any:
-    (configparser := ConfigParser()).read_string(text)
-    return convert_to_ini_to_dict(configparser)
+@ParserRegistry.register("*.ini", "*.INI")
+def parse_ini(text: str) -> Any:
+    (cnfparser := configparser.ConfigParser()).read_string(text)
+    return convert_ini_to_dict(cnfparser)
 
 
-def convert_to_ini_to_dict(configparser: ConfigParser) -> Dict[str, Dict[str, str]]:
-    return {section: dict(configparser[section]) for section in configparser.sections()}
+def convert_ini_to_dict(cnfparser: configparser.ConfigParser) -> Dict[str, Dict]:
+    return {section: dict(cnfparser[section]) for section in cnfparser.sections()}
 
 
 ### .JSON
-@FileParserRegistry.register({"*.json"})
+@ParserRegistry.register("*.json", "*.JSON")
 def parse_json(text: i.ConfigLike) -> Any:
     return json.loads(text)
 
 
 ### .XML
-@FileParserRegistry.register({"*.xml"})
+@ParserRegistry.register("*.xml", "*.XML")
 def parse_xml(text: i.ConfigLike) -> Any:
     root = etree.fromstring(text)
     return convert_etree_to_dict(root)
@@ -62,12 +67,12 @@ def convert_etree_to_dict(element: etree.Element) -> Optional[Union[str, Tree]]:
 
 
 ### .TOML
-@FileParserRegistry.register({"*.toml", "*.tml"})
+@ParserRegistry.register("*.toml", "*.tml", "*.TOML", "*.TML")
 def parse_toml(text: i.ConfigLike) -> Any:
     return toml.loads(text)
 
 
 ### .YAML
-@FileParserRegistry.register({"*.yaml", "*.yml"})
+@ParserRegistry.register("*.yaml", "*.yml", "*.YAML", "*.YML")
 def parse_yaml_safe(text: i.ConfigLike) -> Any:
     return yaml.safe_load(text)
