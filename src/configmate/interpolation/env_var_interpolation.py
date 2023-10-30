@@ -1,3 +1,6 @@
+"""
+Environment variable interpolation.
+"""
 import collections
 import enum
 import os
@@ -5,32 +8,27 @@ import re
 import warnings
 from typing import Collection, Dict, Iterable, Mapping, Optional, Set, Union
 
-from configmate import exceptions, interface as i
+from configmate import base, commons, exceptions
+from configmate.interpolation import interpolator_factory as factory
 
 DEFAULT_ENV_VAR_PATTERN = UNIX_ENV_PATTERN = re.compile(r"^(?![#/])\$(\w+|\{[^}]*\})")
 WINDOWS_ENV_PATTERN = re.compile(r"^(?![#/])%([A-Za-z0-9]+)%", re.IGNORECASE)
 
 
-### Environment variable handling ###
-class MissingEnvVarHandling(str, enum.Enum):
-    """
-    Options for handling unfilled environment variables.
-    """
+class MissingPolicy(str, enum.Enum):
+    """Options for handling unfilled environment variables."""
 
     RAISE_EXCEPTION = "raise_missing"
     WARN = "warn_missing"
     IGNORE = "ignore_missing"
 
-    @classmethod
-    def default(cls) -> "MissingEnvVarHandling":
-        return cls.WARN
 
-
-class EnvVarInterpolator:
+@factory.InterpFactoryRegistry.register(commons.make_typechecker(MissingPolicy))
+class EnvInterpolator(base.BaseInterpolator):
     def __init__(
         self,
+        handling: MissingPolicy = MissingPolicy.WARN,
         env_var_pattern: re.Pattern = DEFAULT_ENV_VAR_PATTERN,
-        handling: MissingEnvVarHandling = MissingEnvVarHandling.default(),
         defaults: Optional[Dict[str, str]] = None,
         ignore_vars: Collection[Union[str, re.Pattern]] = (),
     ) -> None:
@@ -40,7 +38,7 @@ class EnvVarInterpolator:
         self.defaults = defaults
         self.ignore_vars = ignore_vars
 
-    def interpolate(self, text: str) -> i.ConfigLike:
+    def interpolate(self, text: str) -> str:
         return expand_env_vars(
             string=text,
             env_var_pattern=self.pattern,
@@ -53,22 +51,11 @@ class EnvVarInterpolator:
 def expand_env_vars(
     string: str,
     env_var_pattern: re.Pattern = DEFAULT_ENV_VAR_PATTERN,
-    missing_behaviour: MissingEnvVarHandling = MissingEnvVarHandling.default(),
+    missing_behaviour: MissingPolicy = MissingPolicy.WARN,
     defaults: Optional[Dict[str, str]] = None,
     ignore_vars: Collection[Union[str, re.Pattern]] = (),
 ) -> str:
-    """
-    Replace environment variables in a string with their values.
-
-    Args:
-        string: The string to replace environment variables in.
-        config: The configuration for how to fill environment variables.
-
-    Returns:
-        The string with replaced environment variables.
-    """
     fill_vals = collections.ChainMap(os.environ, defaults or {})
-    ignore_vars = ignore_vars or ()
     unfilled_vars: Set[str] = set()
 
     def replacer(match: re.Match) -> str:
@@ -104,7 +91,7 @@ def should_be_ignored(
 def get_env_var_value(
     match: re.Match,
     fill_value_map: Mapping[str, str],
-    handling_mode: MissingEnvVarHandling,
+    handling_mode: MissingPolicy,
 ) -> Optional[str]:
     """
     Get the value of an environment variable.
@@ -112,7 +99,7 @@ def get_env_var_value(
     variable_name = get_variable_name_from_match(match)
     if (fill_val := fill_value_map.get(variable_name)) is not None:
         return fill_val
-    if handling_mode is MissingEnvVarHandling.IGNORE:
+    if handling_mode is MissingPolicy.IGNORE:
         return match.group(0)
     return None
 
@@ -127,10 +114,10 @@ def get_variable_name_from_match(match: re.Match) -> str:
 
 
 def handle_unfilled_vars(
-    unfilled_vars: Iterable[str], handling_mode: MissingEnvVarHandling
+    unfilled_vars: Iterable[str], handling_mode: MissingPolicy
 ) -> None:
-    if handling_mode is MissingEnvVarHandling.RAISE_EXCEPTION:
+    if handling_mode is MissingPolicy.RAISE_EXCEPTION:
         raise exceptions.UnfilledEnvironmentVariableError(unfilled_vars)
-    if handling_mode is MissingEnvVarHandling.WARN:
+    if handling_mode is MissingPolicy.WARN:
         warnings.warn(f"Following environment variables not found: {unfilled_vars}")
     raise NotImplementedError(f"Handling mode {handling_mode} is not implemented yet.")
