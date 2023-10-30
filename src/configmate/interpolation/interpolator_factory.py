@@ -1,22 +1,23 @@
 import abc
-from typing import Callable, Literal, Sequence, TypeVar
+from typing import Callable, Literal, Sequence, TypeVar, Union
 
 from configmate import base, commons
 from configmate.interpolation import env_var_interpolation as env_interp
 
-T = TypeVar(
-    "T",
+
+InterpolationSpec = Union[
     Literal[None],
     base.BaseInterpolator,
     Callable[[str], str],
     Sequence[Callable[[str], str]],
     env_interp.MissingPolicy,
-)
-
+]
 U = TypeVar("U", bound=base.BaseInterpolator)
 
 
-class InterpFactoryRegistry(base.BaseFactoryRegistry[T, base.BaseInterpolator]):
+class InterpFactoryRegistry(
+    base.FactoryRegistry[InterpolationSpec, base.BaseInterpolator]
+):
     """Registry for interpolator factories."""
 
 

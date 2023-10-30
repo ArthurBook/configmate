@@ -78,5 +78,5 @@ class BaseRegistry(HasDescription, abc.ABC, Generic[T, U]):
         )
 
 
-class BaseFactoryRegistry(BaseRegistry[T, Callable[[T], U]]):
+class FactoryRegistry(BaseRegistry[T, Callable[[Any], V]]):
     """Holds factory methods"""

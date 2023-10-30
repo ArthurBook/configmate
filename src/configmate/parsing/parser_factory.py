@@ -1,27 +1,32 @@
 import os
-from typing import Any, Callable, Literal, TypeVar, Union
+from typing import Any, Callable, Literal, Union
+
 from configmate import base, commons
 from configmate.parsing import parsers
 
-T = TypeVar("T", Literal[None], base.BaseParser, Union[str, os.PathLike])
+ParsingSpec = Union[Literal[None], base.BaseParser, Union[str, os.PathLike]]
 
 
-class ParserFactoryRegistry(base.BaseFactoryRegistry[T, base.BaseParser]):
+class ParserFactoryRegistry(base.FactoryRegistry[ParsingSpec, base.BaseParser]):
     ...
 
 
-class ConstructedParser(base.BaseParser):
-    def __init__(self, parse_backend: Callable[[str], Any]) -> None:
-        self._backend = parse_backend
+@ParserFactoryRegistry.register(commons.check_if_none)
+class NoParser(base.BaseParser):
+    def __init__(self, _: Literal[None]) -> None:
+        super().__init__()
+
+    def parse(self, configlike: str) -> str:
+        return configlike
+
+
+@ParserFactoryRegistry.register(commons.check_if_callable)
+class FunctionalParser(base.BaseParser):
+    def __init__(self, function_: Callable[[str], Any]) -> None:
+        self._backend = function_
 
     def parse(self, configlike: str) -> Any:
         return self._backend(configlike)
-
-
-@ParserFactoryRegistry.register(commons.check_if_none)
-class NoParser(ConstructedParser):
-    def parse(self, configlike: str) -> str:
-        return configlike
 
 
 @ParserFactoryRegistry.register(commons.make_typechecker(str, os.PathLike))
