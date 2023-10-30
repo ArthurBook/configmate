@@ -1,22 +1,25 @@
 import abc
-from typing import Callable, Literal, Sequence, TypeVar, Union
+from typing import TYPE_CHECKING, Callable, Literal, Sequence, TypeVar, Union
 
 from configmate import base, commons
-from configmate.interpolation import env_var_interpolation as env_interp
 
+if TYPE_CHECKING:
+    from configmate.interpolation import env_var_interpolation
 
-InterpolationSpec = Union[
-    Literal[None],
-    base.BaseInterpolator,
-    Callable[[str], str],
-    Sequence[Callable[[str], str]],
-    env_interp.MissingPolicy,
-]
-U = TypeVar("U", bound=base.BaseInterpolator)
+T = TypeVar("T", bound=base.BaseInterpolator)
 
 
 class InterpFactoryRegistry(
-    base.FactoryRegistry[InterpolationSpec, base.BaseInterpolator]
+    base.FactoryRegistry[
+        Union[
+            Literal[None],
+            base.BaseInterpolator,
+            Callable[[str], str],
+            Sequence[Callable[[str], str]],
+            "env_var_interpolation.MissingPolicy",
+        ],
+        T,
+    ]
 ):
     """Registry for interpolator factories."""
 
@@ -37,7 +40,7 @@ class EmptyInterpolator(ConstructedInterpolator):
 
 
 @InterpFactoryRegistry.register(commons.make_typechecker(base.BaseInterpolator))
-def pass_through(interpolator: U) -> U:
+def pass_through(interpolator: T) -> T:
     return interpolator
 
 
@@ -50,8 +53,3 @@ class FunctionInterpolator(ConstructedInterpolator):
 class PipedInterpolator(ConstructedInterpolator):
     def __init__(self, interpolators: Sequence[Callable[[str], str]]) -> None:
         super().__init__(commons.Pipe(*interpolators))
-
-
-@InterpFactoryRegistry.register(commons.make_typechecker(env_interp.MissingPolicy))
-def make_env_interpolator(mode: env_interp.MissingPolicy) -> env_interp.EnvInterpolator:
-    return env_interp.EnvInterpolator(handling=mode)

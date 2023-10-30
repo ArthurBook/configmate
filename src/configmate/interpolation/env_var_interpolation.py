@@ -8,27 +8,27 @@ import re
 import warnings
 from typing import Collection, Dict, Iterable, Mapping, Optional, Set, Union
 
-from configmate import base, exceptions
+from configmate import base, commons, exceptions
+from configmate.interpolation import interpolator_factory as factory
 
 DEFAULT_ENV_VAR_PATTERN = UNIX_ENV_PATTERN = re.compile(r"^(?![#/])\$(\w+|\{[^}]*\})")
 WINDOWS_ENV_PATTERN = re.compile(r"^(?![#/])%([A-Za-z0-9]+)%", re.IGNORECASE)
 
 
 class MissingPolicy(str, enum.Enum):
-    """
-    Options for handling unfilled environment variables.
-    """
+    """Options for handling unfilled environment variables."""
 
     RAISE_EXCEPTION = "raise_missing"
     WARN = "warn_missing"
     IGNORE = "ignore_missing"
 
 
+@factory.InterpFactoryRegistry.register(commons.make_typechecker(MissingPolicy))
 class EnvInterpolator(base.BaseInterpolator):
     def __init__(
         self,
-        env_var_pattern: re.Pattern = DEFAULT_ENV_VAR_PATTERN,
         handling: MissingPolicy = MissingPolicy.WARN,
+        env_var_pattern: re.Pattern = DEFAULT_ENV_VAR_PATTERN,
         defaults: Optional[Dict[str, str]] = None,
         ignore_vars: Collection[Union[str, re.Pattern]] = (),
     ) -> None:
