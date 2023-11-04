@@ -1,55 +1,75 @@
-import abc
-from typing import TYPE_CHECKING, Callable, Literal, Sequence, TypeVar, Union
+from typing import TYPE_CHECKING, Callable, Literal, Sequence, Union, overload
 
-from configmate import base, commons
+from configmate import _utils, base
 
 if TYPE_CHECKING:
     from configmate.interpolation import env_var_interpolation
 
-T = TypeVar("T", bound=base.BaseInterpolator)
+InterpolationSpec = Union[
+    Literal[None],
+    Callable[[str], str],
+    Sequence[Callable[[str], str]],
+    base.BaseInterpolator,
+    "env_var_interpolation.MissingPolicy",
+]
 
 
-class InterpFactoryRegistry(
-    base.FactoryRegistry[
-        Union[
-            Literal[None],
-            base.BaseInterpolator,
-            Callable[[str], str],
-            Sequence[Callable[[str], str]],
-            "env_var_interpolation.MissingPolicy",
-        ],
-        T,
-    ]
+# fmt: off
+@overload
+def construct_interpolator(spec: InterpolationSpec) -> base.BaseInterpolator:
+    """
+    Construct a interpolator by invoking the `interpolatorFactoryRegistry`.
+    - If spec is None, returns a no-op interpolator.
+    - If spec is a callable, use the callable for interpolation.
+    - If spec is a sequence of callables, apply them in the given sequence.
+    - If spec is an existing interpolator, returns the same interpolator.
+    """
+@overload
+def construct_interpolator(spec: Literal[None]) -> base.BaseInterpolator: ...
+@overload
+def construct_interpolator(spec: Callable[[str], str]) -> base.BaseInterpolator: ...
+@overload
+def construct_interpolator(spec: Sequence[Callable[[str], str]]) -> base.BaseInterpolator: ...
+@overload
+def construct_interpolator(spec: base.BaseInterpolator) -> base.BaseInterpolator: ...
+# fmt: on
+def construct_interpolator(spec):
+    return InterpolatorFactoryRegistry.get_strategy(spec)(spec)
+
+
+class InterpolatorFactoryRegistry(
+    base.BaseMethodStore[InterpolationSpec, base.BaseInterpolator]
 ):
     """Registry for interpolator factories."""
 
 
-class ConstructedInterpolator(base.BaseInterpolator, abc.ABC):
-    def __init__(self, strategy: Callable[[str], str]) -> None:
-        super().__init__()
-        self.strategy = strategy
-
+@InterpolatorFactoryRegistry.register(_utils.check_if_none, rank=0)
+class EmptyInterpolator(base.BaseInterpolator):
     def interpolate(self, text: str) -> str:
-        return self.strategy(text)
+        return text
 
 
-@InterpFactoryRegistry.register(commons.check_if_none)
-class EmptyInterpolator(ConstructedInterpolator):
-    def __init__(self, _: Literal[None]) -> None:
-        super().__init__(lambda x: x)
-
-
-@InterpFactoryRegistry.register(commons.make_typechecker(base.BaseInterpolator))
-def pass_through(interpolator: T) -> T:
+@InterpolatorFactoryRegistry.register(
+    _utils.make_typecheck(base.BaseInterpolator), rank=1
+)
+def pass_through(interpolator: base.BaseInterpolator) -> base.BaseInterpolator:
     return interpolator
 
 
-@InterpFactoryRegistry.register(commons.check_if_callable)
-class FunctionInterpolator(ConstructedInterpolator):
-    ...
+@InterpolatorFactoryRegistry.register(_utils.check_if_callable, rank=2)
+class FunctionInterpolator(base.BaseInterpolator):
+    def __init__(self, strategy: Callable[[str], str]) -> None:
+        super().__init__()
+        self._strategy = strategy
+
+    def interpolate(self, text: str) -> str:
+        return self._strategy(text)
 
 
-@InterpFactoryRegistry.register(commons.check_if_callable_sequence)
-class PipedInterpolator(ConstructedInterpolator):
+@InterpolatorFactoryRegistry.register(_utils.check_if_callable_sequence, rank=3)
+class PipedInterpolator(base.BaseInterpolator):
     def __init__(self, interpolators: Sequence[Callable[[str], str]]) -> None:
-        super().__init__(commons.Pipe(*interpolators))
+        self._strategy = _utils.Pipe(*interpolators)
+
+    def interpolate(self, text: str) -> str:
+        return self._strategy(text)
