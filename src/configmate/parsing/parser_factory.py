@@ -1,39 +1,45 @@
 import os
-from typing import Any, Callable, Literal, Union
+from typing import Any, Callable, Literal, TypeVar, Union, overload
 
-from configmate import base, commons
-from configmate.parsing import parsers
+from configmate import _utils, base
 
-ParsingSpec = Union[Literal[None], base.BaseParser, Union[str, os.PathLike]]
+T = TypeVar("T")
+ParsingSpec = Union[
+    Literal[None],
+    Callable[[str], T],
+    Union[str, os.PathLike],
+    base.BaseParser[T],
+]
 
 
-class ParserFactoryRegistry(base.FactoryRegistry[ParsingSpec, base.BaseParser]):
+# fmt: off
+@overload
+def construct_parser(spec: ParsingSpec) -> base.BaseParser:
+    """
+    Construct a parser by invoking the `ParserFactoryRegistry`.
+    - If spec is a callable, returns a parser applying the callable for validation.
+    - If spec is a path-like object, returns a parser matchin the file extension for instantiation.
+    - If spec is an existing parser, returns the same parser.
+    """
+@overload
+def construct_parser(spec: Callable[[Any], T]) -> base. BaseParser[T]: ...
+@overload
+def construct_parser(spec: Union[str, os.PathLike]) -> base.BaseParser: ...
+@overload
+def construct_parser(spec: base.BaseParser[T]) -> base.BaseParser[T]: ...
+# fmt: on
+def construct_parser(spec: ParsingSpec) -> base.BaseParser:
+    return ParserFactoryRegistry.get_strategy(spec)(spec)
+
+
+class ParserFactoryRegistry(base.BaseMethodStore[ParsingSpec, base.BaseParser]):
     ...
 
 
-@ParserFactoryRegistry.register(commons.check_if_none)
-class NoParser(base.BaseParser):
-    def __init__(self, _: Literal[None]) -> None:
-        super().__init__()
-
-    def parse(self, configlike: str) -> str:
-        return configlike
-
-
-@ParserFactoryRegistry.register(commons.check_if_callable)
+@ParserFactoryRegistry.register(_utils.check_if_callable, rank=1)
 class FunctionalParser(base.BaseParser):
     def __init__(self, function_: Callable[[str], Any]) -> None:
         self._backend = function_
-
-    def parse(self, configlike: str) -> Any:
-        return self._backend(configlike)
-
-
-@ParserFactoryRegistry.register(commons.make_typechecker(str, os.PathLike))
-class FileNameInferredParser(base.BaseParser):
-    def __init__(self, path: Union[str, os.PathLike]) -> None:
-        self._path = path
-        self._backend = parsers.ParserRegistry.get_strategy(path)
 
     def parse(self, configlike: str) -> Any:
         return self._backend(configlike)

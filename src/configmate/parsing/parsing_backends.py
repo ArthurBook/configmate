@@ -8,10 +8,23 @@ from xml.etree import ElementTree as etree
 import toml
 import yaml
 
-from configmate import base
+from configmate import _utils, base
+from configmate.parsing import parser_factory
+
+XmlTree = Optional[Union[str, Dict[str, "XmlTree"]]]
 
 
-class ParserRegistry(base.BaseRegistry[Union[str, os.PathLike], Callable[[str], Any]]):
+@parser_factory.ParserFactoryRegistry.register(_utils.make_typecheck(str, os.PathLike))
+class FromFileNameInferredParser(base.BaseParser):
+    def __init__(self, path: Union[str, os.PathLike]) -> None:
+        self._path = path
+        self._backend = ParserRegistry.get_strategy(path)
+
+    def parse(self, configlike: str) -> Any:
+        return self._backend(configlike)
+
+
+class ParserRegistry(base.BaseMethodStore[Union[str, os.PathLike], Any]):
     """Holds a mapping from path patterns to parser functions."""
 
 
@@ -42,19 +55,16 @@ def parse_json(text: str) -> Any:
 ### .XML
 @ParserRegistry.register(create_path_matcher("*.xml"))
 @ParserRegistry.register(create_path_matcher("*.XML"))
-def parse_xml(text: str) -> "Tree":
+def parse_xml(text: str) -> "XmlTree":
     root = etree.fromstring(text)
-    return convert_etree_to_dict(root)
+    return _convert_etree_to_dict(root)
 
 
-Tree = Optional[Union[str, Dict[str, "Tree"]]]
-
-
-def convert_etree_to_dict(element: etree.Element) -> Tree:
+def _convert_etree_to_dict(element: etree.Element) -> XmlTree:
     if not (children := list(element)):
         return element.text
     return {
-        child.tag: child.text if not list(child) else convert_etree_to_dict(child)
+        child.tag: child.text if not list(child) else _convert_etree_to_dict(child)
         for child in children
     }
 
