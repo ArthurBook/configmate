@@ -1,10 +1,18 @@
-class CommandLineReadingError(Exception):
-    """Raised when a command line argument cannot be read."""
+class ConfigmateError(Exception):
+    """Base class for all configmate errors."""
 
 
-class NeedsExtension(Exception):
-    """Raised when a parser needs an extension to work."""
+class NoStrategyAvailable(ConfigmateError):
+    """Raised when no overlay strategy is applicable"""
 
 
-class UnfilledEnvironmentVariableError(Exception):
+class SectionNotFound(ConfigmateError):
+    """Raised when the specified section is not found."""
+
+
+class UnfilledEnvironmentVariableError(ConfigmateError):
     """Raised when an environment variable is not set."""
+
+
+class InvalidConfigError(ConfigmateError):
+    """Raised when a config is invalid."""

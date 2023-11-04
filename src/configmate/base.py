@@ -1,12 +1,24 @@
 import abc
 import collections
-from typing import Any, Callable, Deque, Generic, NoReturn, Tuple, TypeVar, cast
+from typing import (
+    Any,
+    Callable,
+    Deque,
+    Generic,
+    NamedTuple,
+    NoReturn,
+    Sequence,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+)
 
 from configmate import exceptions
 
 T = TypeVar("T")
 U = TypeVar("U")
-V = TypeVar("V")
+ClassOrCallable = Union[Type[T], Callable[..., T]]
 
 
 class Description:
@@ -21,6 +33,7 @@ class HasDescription(abc.ABC):
     description = Description()
 
 
+### Key components
 class BaseSource(HasDescription, abc.ABC, Generic[T]):
     @abc.abstractmethod
     def read(self) -> T:
@@ -33,10 +46,25 @@ class BaseInterpolator(HasDescription, abc.ABC):
         ...
 
 
-class BaseParser(HasDescription, abc.ABC):
+class BaseParser(HasDescription, abc.ABC, Generic[T]):
     @abc.abstractmethod
-    def parse(self, configlike: str) -> Any:
+    def parse(self, configlike: str) -> T:
         ...
+
+
+class BaseAggregator(HasDescription, abc.ABC):
+    @abc.abstractmethod
+    def aggregate(self, sequence: Sequence[T]) -> T:
+        ...
+
+
+class BaseSectionSelector(HasDescription, abc.ABC, Generic[T]):
+    @abc.abstractmethod
+    def select(self, config: T) -> Any:
+        ...
+
+    def get_not_found_exc(self, obj: Any, section: Any) -> NoReturn:
+        raise exceptions.SectionNotFound(f"{section=} not found in {obj}")
 
 
 class BaseValidator(HasDescription, abc.ABC, Generic[T]):
@@ -45,38 +73,56 @@ class BaseValidator(HasDescription, abc.ABC, Generic[T]):
         ...
 
 
-class BaseRegistry(HasDescription, abc.ABC, Generic[T, U]):
-    _registry: Deque[Tuple[Callable[[T], bool], U]]
-    _sentinel = object()
+### MethodStore
+class MethodWithTrigger(NamedTuple, Generic[T, U]):
+    trigger: Callable[[T], bool]
+    method: ClassOrCallable[U]
+
+
+class BaseMethodStore(HasDescription, abc.ABC, Generic[T, U]):
+    """A registry for strategies that are associated with a trigger function.
+
+    The trigger function is a callable that takes a key and returns a boolean.
+    The first strategy that is associated with a trigger function that returns
+    a truthy value is returned by `get_strategy`. If no strategy is associated
+    with a trigger function that returns a truthy value, a `NoStrategyAvailable`
+    exception is raised.
+    """
+
+    _registry: Deque[MethodWithTrigger[T, U]]
+    _sentinel = object()  # trigger for no applicable strategy
 
     def __init_subclass__(cls, *args, **kwargs) -> None:
         cls._registry = collections.deque()
 
-    def __getitem__(self, key: T) -> U:
-        return self.get_strategy(key)
-
     @classmethod
-    def get_strategy(cls, key: T) -> U:
-        strategies = (strategy for checker, strategy in cls._registry if checker(key))
-        if (first_match := next(strategies, cls._sentinel)) is cls._sentinel:
+    def get_strategy(cls, key: T) -> ClassOrCallable[U]:
+        """Retrieves first triggered strategy or raises `NoStrategyAvailable`."""
+        methods = (method.method for method in cls._registry if method.trigger(key))
+        if (first_match := next(methods, cls._sentinel)) is cls._sentinel:
             cls.raise_missing(key)
-        return cast(U, first_match)
+        return cast(ClassOrCallable[U], first_match)
 
     @classmethod
-    def register(cls, trigger: Callable[[T], bool], rank: int = -1) -> Callable[[U], U]:
-        return lambda strategy: cls.add(trigger, strategy, rank) or strategy
+    def register(
+        cls, trigger: Callable[[T], bool], rank: int = -1
+    ) -> Callable[[ClassOrCallable[U]], ClassOrCallable[U]]:
+        """Registers a new strategy and associates it with a trigger function."""
+
+        def add_and_return(strategy: ClassOrCallable[U]) -> ClassOrCallable[U]:
+            cls.add(MethodWithTrigger(trigger, strategy), rank)
+            return strategy
+
+        return add_and_return
 
     @classmethod
-    def add(cls, trigger: Callable[[T], bool], strategy: U, rank: int = -1) -> None:
-        cls._registry.insert(rank, (trigger, strategy))
+    def add(cls, method_with_trigger: MethodWithTrigger[T, U], rank: int = -1) -> None:
+        """Inserts a new strategy at the given rank (position in queue)."""
+        cls._registry.insert(rank, method_with_trigger)
 
     @classmethod
     def raise_missing(cls, unfound_key: Any) -> NoReturn:
         raise exceptions.NoStrategyAvailable(
             f"Missing strategy for {unfound_key}, please register one."
-            f"\n\tAvailable strategies: "  # TODO use describe() here
+            f"\n\tAvailable strategies: "  # TODO describe _registry
         )
-
-
-class FactoryRegistry(BaseRegistry[T, Callable[[Any], V]]):
-    """Holds factory methods"""

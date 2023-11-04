@@ -8,7 +8,7 @@ import re
 import warnings
 from typing import Collection, Dict, Iterable, Mapping, Optional, Set, Union
 
-from configmate import base, commons, exceptions
+from configmate import _utils, base, exceptions
 from configmate.interpolation import interpolator_factory as factory
 
 DEFAULT_ENV_VAR_PATTERN = UNIX_ENV_PATTERN = re.compile(r"^(?![#/])\$(\w+|\{[^}]*\})")
@@ -23,7 +23,7 @@ class MissingPolicy(str, enum.Enum):
     IGNORE = "ignore_missing"
 
 
-@factory.InterpFactoryRegistry.register(commons.make_typechecker(MissingPolicy))
+@factory.InterpolatorFactoryRegistry.register(_utils.make_typecheck(MissingPolicy))
 class EnvInterpolator(base.BaseInterpolator):
     def __init__(
         self,
