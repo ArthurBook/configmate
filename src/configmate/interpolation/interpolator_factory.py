@@ -56,7 +56,7 @@ def pass_through(interpolator: base.BaseInterpolator) -> base.BaseInterpolator:
     return interpolator
 
 
-@InterpolatorFactoryRegistry.register(_utils.check_if_callable, rank=2)
+@InterpolatorFactoryRegistry.register(callable, rank=2)
 class FunctionInterpolator(base.BaseInterpolator):
     def __init__(self, strategy: Callable[[str], str]) -> None:
         super().__init__()
@@ -66,7 +66,7 @@ class FunctionInterpolator(base.BaseInterpolator):
         return self._strategy(text)
 
 
-@InterpolatorFactoryRegistry.register(_utils.check_if_callable_sequence, rank=3)
+@InterpolatorFactoryRegistry.register(_utils.is_sequence_of_callables, rank=3)
 class PipedInterpolator(base.BaseInterpolator):
     def __init__(self, interpolators: Sequence[Callable[[str], str]]) -> None:
         self._strategy = _utils.Pipe(*interpolators)

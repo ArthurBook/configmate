@@ -46,7 +46,7 @@ def passthrough(validator: base.BaseValidator[T]) -> base.BaseValidator[T]:
     return validator
 
 
-@ValidatorFactoryRegistry.register(_utils.check_if_callable, rank=2)
+@ValidatorFactoryRegistry.register(callable, rank=2)
 class ValidatorFromCallable(base.BaseValidator[T]):
     def __init__(self, validation_function: Callable[[Any], T]) -> None:
         super().__init__()

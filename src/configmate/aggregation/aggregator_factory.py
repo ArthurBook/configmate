@@ -34,7 +34,7 @@ def pass_through(aggregator: base.BaseAggregator) -> base.BaseAggregator:
     return aggregator
 
 
-@AggregatorFactoryRegistry.register(_utils.check_if_callable, rank=1)
+@AggregatorFactoryRegistry.register(callable, rank=1)
 class FunctionalAggregator(base.BaseAggregator, Generic[T]):
     def __init__(self, function_: Callable[[Sequence[T]], T]) -> None:
         self._backend = function_

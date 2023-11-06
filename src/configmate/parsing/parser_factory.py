@@ -36,7 +36,7 @@ class ParserFactoryRegistry(base.BaseMethodStore[ParsingSpec, base.BaseParser]):
     ...
 
 
-@ParserFactoryRegistry.register(_utils.check_if_callable, rank=1)
+@ParserFactoryRegistry.register(callable, rank=1)
 class FunctionalParser(base.BaseParser):
     def __init__(self, function_: Callable[[str], Any]) -> None:
         self._backend = function_

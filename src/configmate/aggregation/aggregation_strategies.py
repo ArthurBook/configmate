@@ -19,12 +19,12 @@ class AggregationStrategyRegistry(base.BaseMethodStore[Sequence[T], T]):
 
 
 ### Implementations
-@AggregationStrategyRegistry.register(_utils.make_typecheck(Sequence, Set))
+@AggregationStrategyRegistry.register(_utils.is_sequence_of_collections)
 def aggregate_with_chain(items: Sequence[Collection]) -> List:
     return list(itertools.chain.from_iterable(items))
 
 
-@AggregationStrategyRegistry.register(_utils.make_typecheck(Mapping))
+@AggregationStrategyRegistry.register(_utils.is_sequence_of_mappings)
 def aggregate_with_chainmap(items: Sequence[Mapping]) -> ChainMap:
     config_chainmap = collections.ChainMap(*(dict(config) for config in items))
     config_chainmap.maps.reverse()

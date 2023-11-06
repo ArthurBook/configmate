@@ -1,5 +1,5 @@
 from configmate.section_selection.section_selector_factory import (
     SectionSelectionSpec,
-    SectionSelectorFactoryRegistry,
+    SelectorFactoryRegistry,
     construct_sectionselector,
 )
