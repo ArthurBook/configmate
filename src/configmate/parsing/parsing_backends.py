@@ -14,7 +14,7 @@ from configmate.parsing import parser_factory
 XmlTree = Optional[Union[str, Dict[str, "XmlTree"]]]
 
 
-@parser_factory.ParserFactoryRegistry.register(_utils.make_typecheck(str, os.PathLike))
+@parser_factory.ParserFactoryRegistry.register(_utils.is_path)
 class FromFileNameInferredParser(base.BaseParser):
     def __init__(self, path: Union[str, os.PathLike]) -> None:
         self._path = path
