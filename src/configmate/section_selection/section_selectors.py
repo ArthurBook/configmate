@@ -18,7 +18,7 @@ class KeyBasedSectionSelector(base.BaseSectionSelector[base.RecursiveMapping]):
 
 
 @factory.SelectorFactoryRegistry.register(_utils.is_integer, rank=3)
-@factory.SelectorFactoryRegistry.register(_utils.is_sequence_of_strings, rank=4)
+@factory.SelectorFactoryRegistry.register(_utils.is_sequence_of_ints, rank=4)
 class IndexBasedSectionSelector(base.BaseSectionSelector[base.RecursiveSequence]):
     def __init__(self, section: Union[int, Sequence[int]]) -> None:
         self._section = (section,) if isinstance(section, int) else section
