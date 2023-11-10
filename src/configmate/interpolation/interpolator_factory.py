@@ -43,7 +43,7 @@ class InterpolatorFactoryRegistry(
     """Registry for interpolator factories."""
 
 
-@InterpolatorFactoryRegistry.register(_utils.check_if_none, rank=0)
+@InterpolatorFactoryRegistry.register(_utils.is_none, rank=0)
 class EmptyInterpolator(base.BaseInterpolator):
     def interpolate(self, text: str) -> str:
         return text
