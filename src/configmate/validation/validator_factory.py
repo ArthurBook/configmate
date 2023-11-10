@@ -35,7 +35,7 @@ class ValidatorFactoryRegistry(
     """Registry for validator factories."""
 
 
-@ValidatorFactoryRegistry.register(_utils.check_if_none, rank=0)
+@ValidatorFactoryRegistry.register(_utils.is_none, rank=0)
 class NoValidator(base.BaseValidator[T]):
     def validate(self, object_: T) -> T:
         return object_

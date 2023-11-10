@@ -40,7 +40,7 @@ class SelectorFactoryRegistry(
     """Registry for section selector factories."""
 
 
-@SelectorFactoryRegistry.register(_utils.check_if_none, rank=0)
+@SelectorFactoryRegistry.register(_utils.is_none, rank=0)
 class NoSectionSelector(base.BaseSectionSelector):
     def select(self, config: T) -> T:
         return config
