@@ -1,11 +1,13 @@
 import abc
 import collections
+import dataclasses
 from typing import (
     Any,
     Callable,
     Deque,
     Generic,
-    NamedTuple,
+    Iterator,
+    Mapping,
     NoReturn,
     Sequence,
     Type,
@@ -18,7 +20,10 @@ from configmate import exceptions
 
 T = TypeVar("T")
 U = TypeVar("U")
+
 ClassOrCallable = Union[Type[T], Callable[..., T]]
+RecursiveMapping = Mapping[str, Union["RecursiveMapping", U]]
+RecursiveSequence = Sequence["RecursiveSequence"]
 
 
 class Description:
@@ -73,8 +78,38 @@ class BaseValidator(HasDescription, abc.ABC, Generic[T]):
         ...
 
 
-### MethodStore
-class MethodWithTrigger(NamedTuple, Generic[T, U]):
+### cli interactions
+class BaseCliArgFilter(HasDescription, abc.ABC):
+    """A filter that removes cli arguments from a sequence of cli arguments."""
+
+    @abc.abstractmethod
+    def __iter__(self) -> Iterator[str]:
+        ...
+
+
+class BaseOverlaySupplier(HasDescription, abc.ABC, Generic[T]):
+    """A reader that returns a sequence of overlays.
+    A config overlay adjusts or adds to a base configuration.
+    """
+
+    @abc.abstractmethod
+    def get_overlays(self) -> Iterator[T]:
+        ...
+
+
+class BaseOverlayFileSupplier(BaseOverlaySupplier[BaseSource[str]]):
+    ...
+
+
+class BaseArgOverlaySupplier(BaseOverlaySupplier[RecursiveMapping[U]]):
+    ...
+
+
+### methodStore
+@dataclasses.dataclass
+class MethodWithTrigger(HasDescription, Generic[T, U]):
+    """A strategy associated with a trigger function."""
+
     trigger: Callable[[T], bool]
     method: ClassOrCallable[U]
 
