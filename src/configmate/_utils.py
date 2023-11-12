@@ -1,11 +1,12 @@
+import collections
 import functools
-import itertools
 import os
 import re
 from typing import (
     Any,
     Callable,
     Collection,
+    Deque,
     Dict,
     Generic,
     Iterable,
@@ -38,7 +39,7 @@ class Pipe(base.HasDescription, Generic[T]):
 
 
 ### regex helpers
-class RegexEvaluator(base.HasDescription):
+class RegexTrigger(base.HasDescription):
     __slots__ = ("pattern",)
 
     def __init__(self, pattern: re.Pattern) -> None:
@@ -48,13 +49,13 @@ class RegexEvaluator(base.HasDescription):
         return self.pattern.search(arg) is not None
 
     @classmethod
-    def compile_from_prefix(cls, prefix_pattern: str) -> "RegexEvaluator":
+    def compile_from_prefix(cls, prefix_pattern: str) -> "RegexTrigger":
         escaped_prefix = re.escape(prefix_pattern)
         return cls.compile(f"^{escaped_prefix}[^{escaped_prefix}]")
 
     @classmethod
-    def compile(cls, pattern: str) -> "RegexEvaluator":
-        return RegexEvaluator(re.compile(pattern))
+    def compile(cls, pattern: str) -> "RegexTrigger":
+        return RegexTrigger(re.compile(pattern))
 
 
 ### iterator helpers
@@ -69,17 +70,28 @@ def get_nested(dictionary, *keys):
 
 
 # fmt: off
+# pylint: disable=line-too-long
 @overload
-def iterate_window(iterable: Iterable[T], k: Literal[1]) -> Iterable[Tuple[T]]: ...
+def iterate_window(iterable: Iterable[T], size: Literal[1], step: int = 1) -> Iterator[Tuple[T,...]]:
+    """Iterate with a sliding window of length `size` in steps of size `step`."""
 @overload
-def iterate_window(iterable: Iterable[T], k: Literal[2]) -> Iterable[Tuple[T, T]]: ...
+def iterate_window(iterable: Iterable[T], size: Literal[1], step: int = 1) -> Iterator[Tuple[T]]:...
 @overload
-def iterate_window(iterable: Iterable[T], k: Literal[3]) -> Iterable[Tuple[T, T, T]]: ...
-# fmt: on
-def iterate_window(iterable: Iterable[T], k: int) -> Iterable[Tuple[T, ...]]:
-    """Iterate over a sliding window of length k over the given iterable."""
-    return zip(*(itertools.islice(iterable, i, None) for i in range(k)))
-
+def iterate_window(iterable: Iterable[T], size: Literal[2], step: int = 1) -> Iterator[Tuple[T,T]]:...
+@overload
+def iterate_window(iterable: Iterable[T], size: Literal[3], step: int = 1) -> Iterator[Tuple[T,T,T]]:...
+def iterate_window(iterable: Iterable[T], size, step=1)-> Iterator[Tuple[T,...]]:
+    # fmt: on
+    # pylint: enable=line-too-long
+    sliding_window: Deque[T] = collections.deque(maxlen=size)
+    _step = 0
+    for item in iterable:
+        sliding_window.append(item)
+        if len(sliding_window) == size:
+            if _step % step == 0:
+                yield tuple(sliding_window)
+            _step += 1
+ 
 
 def make_nested_dict(keys: Iterable[str], value: Any) -> base.RecursiveMapping:
     """Make a nested dictionary from a sequence of keys and a value."""
@@ -97,7 +109,7 @@ def make_nested_dict(keys: Iterable[str], value: Any) -> base.RecursiveMapping:
 
 
 ### Common triggers
-def check_if_none(object_: Any) -> bool:
+def is_none(object_: Any) -> bool:
     return object_ is None
 
 
@@ -111,6 +123,7 @@ def make_typecheck(*types: Type) -> Callable[[Any], bool]:
 
 is_string = make_typecheck(str)
 is_integer = make_typecheck(int)
+is_dict = make_typecheck(dict)
 is_path = make_typecheck(str, os.PathLike)
 
 
