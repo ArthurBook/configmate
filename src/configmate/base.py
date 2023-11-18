@@ -6,6 +6,7 @@ from typing import (
     Callable,
     Deque,
     Generic,
+    Iterable,
     Iterator,
     Mapping,
     NoReturn,
@@ -20,6 +21,7 @@ from configmate import exceptions
 
 T = TypeVar("T")
 U = TypeVar("U")
+V = TypeVar("V", bound=Callable)
 
 ClassOrCallable = Union[Type[T], Callable[..., T]]
 RecursiveMapping = Mapping[str, Union["RecursiveMapping", U]]
@@ -59,7 +61,7 @@ class BaseParser(HasDescription, abc.ABC, Generic[T]):
 
 class BaseAggregator(HasDescription, abc.ABC):
     @abc.abstractmethod
-    def aggregate(self, sequence: Sequence[T]) -> T:
+    def aggregate(self, configs: Iterable[T]) -> T:
         ...
 
 
@@ -139,12 +141,10 @@ class BaseMethodStore(HasDescription, abc.ABC, Generic[T, U]):
         return cast(ClassOrCallable[U], first_match)
 
     @classmethod
-    def register(
-        cls, trigger: Callable[[T], bool], rank: int = -1
-    ) -> Callable[[ClassOrCallable[U]], ClassOrCallable[U]]:
+    def register(cls, trigger: Callable[[T], bool], rank: int = -1) -> Callable[[V], V]:
         """Registers a new strategy and associates it with a trigger function."""
 
-        def add_and_return(strategy: ClassOrCallable[U]) -> ClassOrCallable[U]:
+        def add_and_return(strategy: V) -> V:
             cls.add(MethodWithTrigger(trigger, strategy), rank)
             return strategy
 

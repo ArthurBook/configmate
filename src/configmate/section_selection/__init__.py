@@ -1,5 +1,10 @@
 from configmate.section_selection.section_selector_factory import (
     SectionSelectionSpec,
     SelectorFactoryRegistry,
-    construct_sectionselector,
+    make_sectionselector,
+)
+from configmate.section_selection.section_selectors import (
+    IndexBasedSectionSelector,
+    KeyBasedSectionSelector,
+    NoSectionSelector,
 )

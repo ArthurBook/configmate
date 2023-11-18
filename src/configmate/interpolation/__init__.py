@@ -5,5 +5,5 @@ from configmate.interpolation.env_var_interpolation import (
 from configmate.interpolation.interpolator_factory import (
     InterpolationSpec,
     InterpolatorFactoryRegistry,
-    construct_interpolator,
+    make_interpolator,
 )

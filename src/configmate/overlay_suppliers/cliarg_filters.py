@@ -6,7 +6,7 @@ from configmate import _utils, base, config_sources
 
 DEFAULT_OVERLAY_STREAM = config_sources.CommandLineArgs()
 DEFAULT_KWARG_PREFIX = "+"  # for example: "+foo.bar value"
-DEFAULT_FILE_PREFIX = "++"  # for example: "+foo.bar value"
+DEFAULT_FILE_PREFIX = "++"  # for example: "++path/to/file.yaml"
 DEFAULT_SECTION_END = "/"  # for example: Raxban +i 1 ++ping/pong / Haxban ..."
 
 

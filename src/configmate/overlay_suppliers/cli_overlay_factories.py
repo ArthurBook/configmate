@@ -13,7 +13,7 @@ from typing import (
 from typing_extensions import TypedDict
 
 from configmate import _utils, base, config_sources
-from configmate.cli_reading import cliarg_filters, cliarg_parsers
+from configmate.overlay_suppliers import cliarg_filters, cliarg_parsers
 
 T = TypeVar("T")
 U = TypeVar("U", bound=cliarg_parsers.OverlayFileSupplier)
@@ -45,7 +45,7 @@ def make_cli_section_iterator(
 ###
 # file overlay reader factory
 ###
-class FileOverlayOptions(SectionOptions, total=False):
+class OverlayFileOptions(SectionOptions, total=False):
     file_arg_prefix: str
     file_encoding: str
 
@@ -54,7 +54,7 @@ OverlayFileSpec = Union[
     Literal[None],
     base.BaseOverlayFileSupplier,
     str,
-    FileOverlayOptions,
+    OverlayFileOptions,
 ]
 
 is_file_overlay_supplier = _utils.make_typecheck(base.BaseOverlayFileSupplier)
@@ -72,7 +72,7 @@ def construct_file_supplier(spec: base.BaseOverlayFileSupplier) -> base.BaseOver
 @overload
 def construct_file_supplier(spec: str) -> base.BaseOverlayFileSupplier: ...
 @overload
-def construct_file_supplier(spec: FileOverlayOptions) -> base.BaseOverlayFileSupplier: ...
+def construct_file_supplier(spec: OverlayFileOptions) -> base.BaseOverlayFileSupplier: ...
 # fmt: on
 def construct_file_supplier(spec: OverlayFileSpec) -> base.BaseOverlayFileSupplier:
     return OverlayFileSupplierFactoryRegistry.get_strategy(spec)(spec)
@@ -100,7 +100,7 @@ def make_file_supplier_from_string(section_name: str) -> base.BaseOverlayFileSup
 
 
 @OverlayFileSupplierFactoryRegistry.register(_utils.is_dict)
-def make_file_supplier(spec: FileOverlayOptions) -> cliarg_parsers.OverlayFileSupplier:
+def make_file_supplier(spec: OverlayFileOptions) -> cliarg_parsers.OverlayFileSupplier:
     section = make_cli_section_iterator(**spec)
     section_args = make_cli_arg_iterator(section, **spec)
     return make_file_overlay_supplier(section_args, **spec)
@@ -130,16 +130,16 @@ def make_cli_arg_iterator(
 ###
 # arg overlay reader factory
 ###
-class ArgOverlayOptions(SectionOptions, Generic[T], total=False):
+class OverlayArgOptions(SectionOptions, Generic[T], total=False):
     key_prefix: str
     key_split_token: str
     value_parser: Callable[[str], T]
 
 
-ArgOverlaySpec = Union[
+OverlayArgSpec = Union[
     Literal[None],
     str,
-    ArgOverlayOptions[T],
+    OverlayArgOptions[T],
     base.BaseArgOverlaySupplier[T],
 ]
 
@@ -148,7 +148,7 @@ is_arg_overlay_supplier = _utils.make_typecheck(base.BaseArgOverlaySupplier)
 
 # fmt: off
 @overload
-def construct_arg_supplier(spec: ArgOverlaySpec[T]) -> base.BaseArgOverlaySupplier[T]:
+def construct_arg_supplier(spec: OverlayArgSpec[T]) -> base.BaseArgOverlaySupplier[T]:
     '''TODO docs
     '''
 @overload
@@ -160,12 +160,12 @@ def construct_arg_supplier(spec: cliarg_parsers.OverlayArgSupplier[T]) -> cliarg
 @overload
 def construct_arg_supplier(spec: base.BaseArgOverlaySupplier[T]) -> base.BaseArgOverlaySupplier[T]: ... # pylint: disable=line-too-long
 # fmt: on
-def construct_arg_supplier(spec: ArgOverlaySpec) -> base.BaseArgOverlaySupplier:
+def construct_arg_supplier(spec: OverlayArgSpec) -> base.BaseArgOverlaySupplier:
     return OverlayArgSupplierFactoryRegistry.get_strategy(spec)(spec)
 
 
 class OverlayArgSupplierFactoryRegistry(
-    base.BaseMethodStore[ArgOverlaySpec[T], base.BaseArgOverlaySupplier[T]]
+    base.BaseMethodStore[OverlayArgSpec[T], base.BaseArgOverlaySupplier[T]]
 ):
     """A registry of methods for constructing overlay file readers from a CLI argument."""
 
@@ -186,7 +186,7 @@ def make_section_arg_supplier(section_name: str) -> base.BaseArgOverlaySupplier:
 
 
 @OverlayArgSupplierFactoryRegistry.register(_utils.is_dict)
-def make_arg_supplier(spec: ArgOverlayOptions[T]) -> base.BaseArgOverlaySupplier[T]:
+def make_arg_supplier(spec: OverlayArgOptions[T]) -> base.BaseArgOverlaySupplier[T]:
     section = make_cli_section_iterator(**spec)
     return cliarg_parsers.OverlayArgSupplier(
         args=make_cli_key_value_iterator(section, **spec),
