@@ -8,10 +8,13 @@ from xml.etree import ElementTree as etree
 import toml
 import yaml
 
-from configmate import _utils, base
+from configmate import _utils, base, config_sources
 from configmate.parsing import parser_factory
 
 XmlTree = Optional[Union[str, Dict[str, "XmlTree"]]]
+
+
+is_file = _utils.make_typecheck(config_sources.File)
 
 
 @parser_factory.ParserFactoryRegistry.register(_utils.is_path)
@@ -22,6 +25,11 @@ class FromFileNameInferredParser(base.BaseParser):
 
     def parse(self, configlike: str) -> Any:
         return self._backend(configlike)
+
+
+@parser_factory.ParserFactoryRegistry.register(is_file)
+def make_parser_from_file(file: config_sources.File) -> FromFileNameInferredParser:
+    return FromFileNameInferredParser(file.path)
 
 
 class ParserRegistry(base.BaseMethodStore[Union[str, os.PathLike], Any]):

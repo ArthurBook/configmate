@@ -1,7 +1,18 @@
-from typing import Any, Sequence, Union
+from typing import Any, Literal, Sequence, TypeVar, Union
 
 from configmate import _utils, base
 from configmate.section_selection import section_selector_factory as factory
+
+T = TypeVar("T")
+
+
+@factory.SelectorFactoryRegistry.register(_utils.is_none, rank=0)
+class NoSectionSelector(base.BaseSectionSelector):
+    def __init__(self, _: Literal[None]) -> None:
+        super().__init__()
+
+    def select(self, config: T) -> T:
+        return config
 
 
 @factory.SelectorFactoryRegistry.register(_utils.is_string, rank=1)

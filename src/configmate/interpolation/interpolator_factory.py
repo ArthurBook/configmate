@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Callable, Literal, Sequence, Union, overload
+from typing import TYPE_CHECKING, Callable, Literal, Sequence, Union
 
 from configmate import _utils, base
 
@@ -14,26 +14,7 @@ InterpolationSpec = Union[
 ]
 
 
-# fmt: off
-@overload
-def construct_interpolator(spec: InterpolationSpec) -> base.BaseInterpolator:
-    """
-    Construct a interpolator by invoking the `interpolatorFactoryRegistry`.
-    - If spec is None, returns a no-op interpolator.
-    - If spec is a callable, use the callable for interpolation.
-    - If spec is a sequence of callables, apply them in the given sequence.
-    - If spec is an existing interpolator, returns the same interpolator.
-    """
-@overload
-def construct_interpolator(spec: Literal[None]) -> base.BaseInterpolator: ...
-@overload
-def construct_interpolator(spec: Callable[[str], str]) -> base.BaseInterpolator: ...
-@overload
-def construct_interpolator(spec: Sequence[Callable[[str], str]]) -> base.BaseInterpolator: ...
-@overload
-def construct_interpolator(spec: base.BaseInterpolator) -> base.BaseInterpolator: ...
-# fmt: on
-def construct_interpolator(spec):
+def make_interpolator(spec: InterpolationSpec) -> base.BaseInterpolator:
     return InterpolatorFactoryRegistry.get_strategy(spec)(spec)
 
 

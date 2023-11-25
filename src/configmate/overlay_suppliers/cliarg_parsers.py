@@ -2,7 +2,7 @@ import json
 from typing import Callable, Generic, Iterable, Iterator, List, TypeVar
 
 from configmate import _utils, base, config_sources
-from configmate.cli_reading import cliarg_filters
+from configmate.overlay_suppliers import cliarg_filters
 
 DEFAULT_ARG_KEY_SPLIT_TOKEN = "."  # splits +foo.bar to (foo, bar)
 DEFAULT_ARG_PARSER = json.loads  # JSON

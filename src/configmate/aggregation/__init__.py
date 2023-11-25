@@ -1,6 +1,6 @@
 from configmate.aggregation.aggregation_strategies import (
     AggregationStrategyRegistry,
-    StrategyBasedAggregator,
+    BasicAggregator,
 )
 from configmate.aggregation.aggregator_factory import (
     AggregatorFactoryRegistry,
