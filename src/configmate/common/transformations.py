@@ -21,7 +21,7 @@ class Transformer(abc.ABC, Generic[T, U]):
         """
         raise NotImplementedError
 
-    def __init__(self) -> None:
+    def __init__(self, *_, **__) -> None:
         super().__init__()
         self._callbacks: List[Callback[U]] = []
 
@@ -31,8 +31,11 @@ class Transformer(abc.ABC, Generic[T, U]):
         self._run_callbacks(ctx, result)
         return result
 
-    def __add__(self, step: "Transformer[U, V]") -> "TransformationLink[T, V]":
+    def __or__(self, step: "Transformer[U, V]") -> "TransformationLink[T, V]":
         return TransformationLink(self, step)
+
+    def __rshift__(self, step: "Transformer[T, U]") -> "TransformationMap[T, U]":
+        return TransformationMap(self, step)
 
     def append_callback(self, callback: Callback[U]) -> "Transformer[T, U]":
         self._callbacks.append(callback)
@@ -59,3 +62,25 @@ class TransformationLink(Transformer[T, V], Generic[T, V]):
     @property
     def output_type(self) -> Type[V]:
         return self._next.output_type
+
+
+class TransformationMap(Transformer[T, List[U]], Generic[T, U]):
+    def __init__(self, *steps: Transformer[T, U]) -> None:
+        super().__init__()
+        if len(steps) == 0:
+            raise ValueError("At least one step is required")
+        self._steps = steps
+
+    def __rshift__(self, step: Transformer[T, U]) -> "TransformationMap[T, U]":
+        return TransformationMap(*self._steps, step)
+
+    def _apply(self, ctx: context.Context, input_: T) -> List[U]:
+        return [step(input_, ctx) for step in self._steps]
+
+    @property
+    def input_type(self) -> Type[T]:
+        return self._steps[0].input_type
+
+    @property
+    def output_type(self) -> Type[U]:
+        return self._steps[0].output_type
