@@ -6,6 +6,19 @@ from configmate.components.aggregators import (
     FunctionAggregator,
     OverlayAggregator,
 )
+from configmate.components.cli_readers import (
+    ArgSelector,
+    CliReaderFactory,
+    CliSectionReader,
+    KeyValueSelector,
+)
+from configmate.components.interpolators import (
+    FunctionalInterpolator,
+    InterpolatorChain,
+    InterpolatorFactory,
+    InterpolatorSpec,
+    VariableInterpolator,
+)
 from configmate.components.parsers import (
     FileFormatParserRegistry,
     FunctionParser,
@@ -18,15 +31,12 @@ from configmate.components.parsers import (
     XmlParser,
     YamlParser,
 )
-from configmate.components.string_interpolators import (
-    FunctionalInterpolator,
-    InterpolatorChain,
-    InterpolatorFactory,
-    InterpolatorSpec,
-    VariableInterpolator,
+from configmate.components.selectors import (
+    SectionSelectionSpec,
+    SectionSelector,
+    SectionSelectorFactory,
 )
-from configmate.components.type_validators import (
-    ClassValidator,
+from configmate.components.validators import (
     FunctionValidator,
     TypeValidatorFactory,
     ValidationSpec,

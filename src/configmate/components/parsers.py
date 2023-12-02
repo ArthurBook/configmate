@@ -1,7 +1,9 @@
 """ Parsing steps for the pipeline
 """
 import configparser
+import dataclasses
 import json
+import os
 import pathlib
 from typing import Any, Callable, Dict, Generic, Literal, Type, TypeVar, Union
 from xml.etree import ElementTree as etree
@@ -9,53 +11,52 @@ from xml.etree import ElementTree as etree
 import toml
 import yaml
 
-from configmate.common import context, registry, transformations, types
+from configmate.base import operators, registry, types
 
 T = TypeVar("T")
-U = TypeVar("U", bound="ParsingSpec")
-V = TypeVar("V")
+T_co = TypeVar("T_co", covariant=True)
+SpecT_co = TypeVar("SpecT_co", bound="ParsingSpec", covariant=True)
 
 
 ###
 # Parser base class
 ###
-class Parser(transformations.Transformer[Any, T], Generic[T]):
+class Parser(operators.Operator[Any, T_co], Generic[T_co]):
     ...
 
 
-ParsingSpec = Union[Callable[[str], T], types.FilePath]
-ParserFactoryMethod = Callable[[U], Parser[T]]
+@dataclasses.dataclass
+class InferFrom(Generic[T_co]):
+    source_operator: T_co
+
+
+ParsingSpec = Union[
+    Callable[[str], T_co],
+    Union[str, os.PathLike],
+    InferFrom[operators.Operator[Any, types.FilePath]],
+]
+ParserFactoryMethod = Callable[[SpecT_co], Parser[T_co]]
 
 
 ###
 # factory for parser strategies
 ###
-class ParserFactory(
-    registry.StrategyRegistryMixin[ParsingSpec[T], ParserFactoryMethod[U, T]],
-    types.RegistryProtocol[ParsingSpec, Parser[T]],
-):
-    def __getitem__(self, key: ParsingSpec[V]) -> Parser[V]:
-        return self.get_first_match(key)(key)  # type: ignore
+class ParserFactory(registry.StrategyRegistryMixin[ParsingSpec, ParserFactoryMethod]):
+    @classmethod
+    def infer_from(cls, step: operators.Operator[Any, types.FilePath]) -> Parser[Any]:
+        return cls.build_parser(InferFrom(step))
 
     @classmethod
-    def infer_from(
-        cls, step: transformations.Transformer[Any, types.FilePath]
-    ) -> "InferredParser":
-        return InferredParser(step)
+    def build_parser(cls, key: ParsingSpec[T]) -> Parser[T]:
+        return cls.get_first_match(key)(key)
 
 
 ###
 # factory for file format parser strategies
 ###
-class FileFormatParserRegistry(
-    registry.DictRegistryMixin[types.FilePath, Type[Parser[Any]]],
-    types.RegistryProtocol[types.FilePath, Parser[Any]],
-):
-    def __getitem__(self, key: types.FilePath) -> Parser[Any]:
-        return self.get_parser(key)
-
+class FileFormatParserRegistry(registry.DictRegistryMixin[str, Type[Parser[Any]]]):
     @classmethod
-    def get_parser(cls, path_or_extension: types.FilePath) -> Parser[Any]:
+    def infer_parser(cls, path_or_extension: types.FilePath) -> Parser[Any]:
         if suffix := pathlib.Path(path_or_extension).suffix:
             return cls.lookup(suffix)()
         return cls.lookup(cls._normalize_extension(path_or_extension))()
@@ -66,58 +67,53 @@ class FileFormatParserRegistry(
             cls.register(cls._normalize_extension(extension), strategy)
 
     @staticmethod
-    def _normalize_extension(extension: types.FilePath) -> str:
+    def _normalize_extension(extension: Union[str, os.PathLike]) -> str:
         return f".{str(extension).lstrip('.')}"
-
-
-class InferredParser(transformations.Transformer[str, Any]):
-    """A parser that infers the file format from the file extension."""
-
-    registry = FileFormatParserRegistry()
-    CONTEXT_FILENAME_KEY = "_filepath"
-
-    def __init__(
-        self, infer_via: transformations.Transformer[Any, types.FilePath]
-    ) -> None:
-        super().__init__()
-        infer_via.append_callback(self._set_path_in_context)
-
-    def _apply(self, ctx: context.Context, input_: str) -> Any:
-        filename = self._get_path_from_context(ctx)
-        compatible_parser = self.registry[filename]
-        return compatible_parser(input_)
-
-    @staticmethod
-    def _get_path_from_context(ctx: context.Context) -> types.FilePath:
-        return ctx[InferredParser.CONTEXT_FILENAME_KEY]
-
-    @staticmethod
-    def _set_path_in_context(ctx: context.Context, result: types.FilePath) -> None:
-        ctx[InferredParser.CONTEXT_FILENAME_KEY] = result
 
 
 ###
 # concrete parsers
 ###
-class FunctionParser(Parser[T]):
-    def __init__(self, parser: Callable[[str], T]) -> None:
+class FunctionParser(Parser[T_co]):
+    def __init__(self, parser: Callable[[str], T_co]) -> None:
         super().__init__()
         self._parser = parser
 
-    def _apply(self, ctx: context.Context, input_: Any) -> T:
+    def _transform(self, ctx: operators.Context, input_: Any) -> T_co:
         return self._parser(input_)
+
+
+class InferredParser(Parser[Any], Generic[types.FilePathT]):
+    """A parser that infers the file format from the file extension."""
+
+    infer_parser = staticmethod(FileFormatParserRegistry.infer_parser)
+
+    def __init__(
+        self, infer_via: InferFrom[operators.Operator[Any, types.FilePath]]
+    ) -> None:
+        super().__init__()
+        self._path_sender = infer_via.source_operator
+        infer_via.source_operator.append_callback(self._store_path)
+
+    def _transform(self, ctx: operators.Context, input_: str) -> Any:
+        filename: types.FilePath = ctx[self._path_sender].filepath
+        compatible_parser = self.infer_parser(filename)
+        return compatible_parser(input_)
+
+    def _store_path(self, ctx: operators.Context, result: types.FilePath) -> None:
+        ctx[self._path_sender].filepath = result
 
 
 ###
 # File format specific parsers
 ###
-class JsonParser(Parser[T]):
-    def _apply(self, ctx: context.Context, input_: Any) -> T:
+class JsonParser(Parser[Any]):
+    def _transform(self, ctx: operators.Context, input_: Any) -> Any:
         return json.loads(input_)
 
 
 class IniParser(Parser[Any]):
-    def _apply(self, ctx: context.Context, input_: Any) -> Any:
+    def _transform(self, ctx: operators.Context, input_: Any) -> Any:
         (cnfparser := configparser.ConfigParser()).read_string(input_)
         return self._convert_ini_to_dict(cnfparser)
 
@@ -129,7 +125,7 @@ class IniParser(Parser[Any]):
 class XmlParser(Parser[Any]):
     XmlTree = Union[Literal[None], str, Dict[str, "XmlTree"]]
 
-    def _apply(self, ctx: context.Context, input_: Any) -> Any:
+    def _transform(self, ctx: operators.Context, input_: Any) -> Any:
         root = etree.fromstring(input_)
         return self._convert_etree_to_dict(root)
 
@@ -146,12 +142,12 @@ class XmlParser(Parser[Any]):
 
 
 class YamlParser(Parser[Any]):
-    def _apply(self, ctx: context.Context, input_: Any) -> Any:
+    def _transform(self, ctx: operators.Context, input_: Any) -> Any:
         return yaml.safe_load(input_)
 
 
 class TomlParser(Parser[Any]):
-    def _apply(self, ctx: context.Context, input_: Any) -> Any:
+    def _transform(self, ctx: operators.Context, input_: Any) -> Any:
         return toml.loads(input_)
 
 
@@ -162,9 +158,10 @@ class TomlParser(Parser[Any]):
 FileFormatParserRegistry.add_strategy(JsonParser, ".json", ".JSON")
 FileFormatParserRegistry.add_strategy(IniParser, ".ini", ".INI")
 FileFormatParserRegistry.add_strategy(XmlParser, ".xml", ".XML")
-FileFormatParserRegistry.add_strategy(TomlParser, ".toml", ".TOML")
-FileFormatParserRegistry.add_strategy(YamlParser, ".yaml", ".YAML")
+FileFormatParserRegistry.add_strategy(TomlParser, ".tml", ".toml", ".TML", ".TOML")
+FileFormatParserRegistry.add_strategy(YamlParser, '.yml', ".yaml", '.YML', ".YAML")
 
+ParserFactory.register(lambda spec: isinstance(spec, InferFrom), InferredParser)
 ParserFactory.register(callable, FunctionParser)
-ParserFactory.register(lambda spec: isinstance(spec, str), FileFormatParserRegistry.get_parser)
+ParserFactory.register(lambda spec: isinstance(spec, str), FileFormatParserRegistry.infer_parser)
 # fmt: on

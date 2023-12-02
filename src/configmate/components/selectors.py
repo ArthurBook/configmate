@@ -1,32 +1,35 @@
 """ Generic flexible aggregation step usable in the pipeline
 """
 import functools
+
 from typing import Any, Callable, NoReturn, Sequence, TypeVar, Union
 
-from configmate.common import context, exceptions, registry, transformations, types
+from configmate.base import exceptions, operators, registry
 
-T = TypeVar("T")
-U = TypeVar("U", bound="SectionSelectionSpec")
-V = TypeVar("V")
+T_co = TypeVar("T_co", covariant=True)
+T_contra = TypeVar("T_contra", contravariant=True)
+SpecT_co = TypeVar("SpecT_co", bound="SectionSelectionSpec", covariant=True)
 
 
-class SectionSelector(transformations.Transformer[Any, Any]):
+class SectionSelector(operators.Operator[T_contra, T_co]):
     """Selects a section from the config"""
 
 
-SectionSelectionSpec = Union[Callable[[Any], Any], str, Sequence[str]]
-SectionSelectorFactoryMethod = Callable[[U], SectionSelector]
+SectionSelectionSpec = Union[Callable[[T_contra], T_co], str, Sequence[str]]
+SectionSelectorFactoryMethod = Callable[[SpecT_co], SectionSelector[T_contra, T_co]]
 
 
 ###
 # factory for validation strategies
 ###
 class SectionSelectorFactory(
-    registry.StrategyRegistryMixin[SectionSelectionSpec, SectionSelectorFactoryMethod],
-    types.RegistryProtocol[SectionSelectionSpec, SectionSelector],
+    registry.StrategyRegistryMixin[SectionSelectionSpec, SectionSelectorFactoryMethod]
 ):
-    def __getitem__(self, key: SectionSelectionSpec) -> SectionSelector:
-        return self.get_first_match(key)(key)
+    @classmethod
+    def build_selector(
+        cls, key: SectionSelectionSpec[T_contra, T_co]
+    ) -> SectionSelector[T_contra, T_co]:
+        return cls.get_first_match(key)(key)
 
 
 ###
@@ -37,7 +40,7 @@ class FunctionSectionSelector(SectionSelector):
         super().__init__()
         self._method = selector_function
 
-    def _apply(self, ctx: context.Context, input_: Any) -> Any:
+    def _transform(self, ctx: operators.Context, input_: Any) -> Any:
         return self._method(input_)
 
 
@@ -46,7 +49,7 @@ class KeySelector(SectionSelector):
         super().__init__()
         self._section = (section,) if isinstance(section, str) else section
 
-    def _apply(self, ctx: context.Context, input_: Any) -> Any:
+    def _transform(self, ctx: operators.Context, input_: Any) -> Any:
         try:
             return functools.reduce(lambda d, key: d[key], self._section, input_)
         except (TypeError, KeyError) as exc:
