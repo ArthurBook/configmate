@@ -1,26 +1,24 @@
 """ Generic flexible interpolation steps usable in the pipeline
 """
 import contextlib
-import os
 import re
-from typing import Callable, Iterable, Mapping, Optional, TypeVar, Union
+from typing import Callable, Iterable, Mapping, Set, TypeVar, Union
 
-from configmate.common import context, registry, transformations, types
+from configmate.base import constants, operators, registry
 
-
-T = TypeVar("T")
-U = TypeVar("U", bound="InterpolatorSpec")
-
-# fmt: off
-InterpolatorSpec = Union[Mapping[str, str], Callable[[str], str], Iterable["InterpolatorSpec"]]
-InterpolatorFactoryMethod = Callable[[U], "StringInterpolator"]
-# fmt: on
+InterpolatorSpec = Union[
+    Callable[[str], str],
+    Mapping[str, str],
+    Iterable["InterpolatorSpec"],
+]
+_SpecT_co = TypeVar("_SpecT_co", bound=InterpolatorSpec, covariant=True)
+InterpolatorFactoryMethod = Callable[[_SpecT_co], "StringInterpolator"]
 
 
 ###
 # base class for interpolation steps
 ###
-class StringInterpolator(transformations.Transformer[str, str]):
+class StringInterpolator(operators.Operator[str, str]):
     input_type = str
     output_type = str
 
@@ -30,10 +28,10 @@ class StringInterpolator(transformations.Transformer[str, str]):
 ###
 class InterpolatorFactory(
     registry.StrategyRegistryMixin[InterpolatorSpec, InterpolatorFactoryMethod],
-    types.RegistryProtocol[InterpolatorSpec, StringInterpolator],
 ):
-    def __getitem__(self, key: InterpolatorSpec) -> StringInterpolator:
-        return self.get_first_match(key)(key)
+    @classmethod
+    def build_interpolator(cls, key: InterpolatorSpec) -> StringInterpolator:
+        return cls.get_first_match(key)(key)
 
 
 ###
@@ -44,63 +42,54 @@ class FunctionalInterpolator(StringInterpolator):
         super().__init__()
         self._method = interpolation_method
 
-    def _apply(self, ctx: context.Context, input_: str) -> str:
+    def _transform(self, ctx: operators.Context, input_: str) -> str:
         return self._method(input_)
 
 
-class EnvironmentVariables(types.RegistryProtocol):
-    def __getitem__(self, key: str) -> Optional[str]:
-        return os.environ[key]
-
-
 class VariableInterpolator(StringInterpolator):
-    DEFAULT_SUB_PATTERN = r"\${(?P<variable>\w+)(?::(?P<default_value>[^}:]+))?}"
-    MISSING_ENV_VARS_CONTEXT_KEY = "missing_vars"
-
     def __init__(
         self,
-        variables: types.RegistryProtocol[str, str] = EnvironmentVariables(),
-        pattern: re.Pattern = re.compile(DEFAULT_SUB_PATTERN),
+        substitutions: Mapping[str, str] = constants.ENVIRONMENT,
+        pattern: re.Pattern = constants.BASH_VAR_PATTERN,
     ) -> None:
         super().__init__()
-        self._variables = variables
-        self._pattern = pattern
+        self._substitutions = substitutions
+        self._sub_pattern = pattern
 
-    def _apply(self, ctx: context.Context, input_: str) -> str:
-        missing_vars = ctx[self.MISSING_ENV_VARS_CONTEXT_KEY] = set()
+    def _transform(self, ctx: operators.Context, input_: str) -> str:
+        missing_vars: Set[str] = set()
 
         def replacer(match: re.Match) -> str:
             nonlocal missing_vars
             env_var_name = match.group("variable")
             with contextlib.suppress(KeyError):
-                return self._variables[env_var_name]
+                return self._substitutions[env_var_name]
             missing_vars.add(env_var_name)
             return match.group("default_value") or match.group(0)
 
-        return self._pattern.sub(replacer, input_)
+        ctx[self].missing_vars = missing_vars
+        return self._sub_pattern.sub(replacer, input_)
 
 
 class InterpolatorChain(StringInterpolator):
-    factory = InterpolatorFactory()
+    build_interpolator = InterpolatorFactory.build_interpolator
 
-    def __init__(
-        self, interpolators: Iterable[transformations.Transformer[str, str]]
-    ) -> None:
+    def __init__(self, interpolators: Iterable[operators.Operator[str, str]]) -> None:
         super().__init__()
         if not (interpolators := list(interpolators)):
             raise ValueError("At least one interpolator is required for a chain.")
-        self._interpolation = interpolators[0]
-        for interpolator in interpolators[1:]:
-            self._interpolation += interpolator
+        self._interpolation = interpolators.pop(0)
+        for interpolator in interpolators:
+            self._interpolation = self._interpolation.pipe_to(interpolator)
 
-    def _apply(self, ctx: context.Context, input_: str) -> str:
+    def _transform(self, ctx: operators.Context, input_: str) -> str:
         return self._interpolation(input_, ctx)
 
     @classmethod
     def from_factory(cls, spec: Iterable[InterpolatorSpec]) -> "InterpolatorChain":
         spec = list(spec)  # ensures we dont exhaust the iterator
         if all(callable(s) or isinstance(s, Mapping) for s in spec):
-            return cls(map(cls.factory.__getitem__, spec))
+            return cls(map(cls.build_interpolator, spec))
         raise ValueError("Only callables and maps supported for chained interpolation.")
 
 

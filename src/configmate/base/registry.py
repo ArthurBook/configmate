@@ -1,48 +1,49 @@
 import collections
 from typing import Callable, Deque, Dict, Generic, NoReturn, Tuple, TypeVar
 
-from configmate.common import exceptions
+from configmate.base import exceptions
 
+T = TypeVar("T")
 T_contra = TypeVar("T_contra", contravariant=True)
-U = TypeVar("U")
 
 
-class DictRegistryMixin(Generic[T_contra, U]):
-    _registry: Dict[T_contra, U]
+class DictRegistryMixin(Generic[T_contra, T]):
+    _registry: Dict[T_contra, T]
 
     def __init_subclass__(cls, *args, **kwargs) -> None:
         cls._registry = {}
         return super().__init_subclass__(*args, **kwargs)
 
     @classmethod
-    def lookup(cls, key: T_contra) -> U:
+    def lookup(cls, key: T_contra) -> T:
         """Retrieves first triggered strategy or raises `~exceptions.NoApplicableStrategy`."""
         if key in cls._registry:
             return cls._registry[key]
         _raise_missing(cls, key)
 
     @classmethod
-    def register(cls, key: T_contra, value: U) -> None:
+    def register(cls, key: T_contra, value: T) -> None:
         """Inserts a new strategy at the given rank (position in queue)."""
         cls._registry[key] = value
 
 
-class StrategyRegistryMixin(Generic[T_contra, U]):
-    _registry: Deque[Tuple[Callable[[T_contra], bool], U]]
+class StrategyRegistryMixin(Generic[T_contra, T]):
+    _registry: Deque[Tuple[Callable[[T_contra], bool], T]]
 
     def __init_subclass__(cls, *args, **kwargs) -> None:
         cls._registry = collections.deque()
         return super().__init_subclass__(*args, **kwargs)
 
-    def get_first_match(self, key: T_contra) -> U:
+    @classmethod
+    def get_first_match(cls, key: T_contra) -> T:
         """Retrieves first triggered strategy or raises `~exceptions.NoApplicableStrategy`."""
-        for entry in (entry for trigger, entry in self._registry if trigger(key)):
+        for entry in (entry for trigger, entry in cls._registry if trigger(key)):
             return entry
-        _raise_missing(self, key)
+        _raise_missing(cls, key)
 
     @classmethod
     def register(
-        cls, trigger: Callable[[T_contra], bool], entry: U, rank: int = -1
+        cls, trigger: Callable[[T_contra], bool], entry: T, rank: int = -1
     ) -> None:
         """Inserts a new strategy at the given rank (position in queue)."""
         cls._registry.insert(rank, (trigger, entry))
