@@ -1,13 +1,13 @@
 import collections
-from typing import Callable, Deque, Dict, Generic, NoReturn, Tuple, TypeVar
+from typing import Any, Callable, Deque, Dict, Generic, NoReturn, Tuple, TypeVar
 
-from configmate.base import exceptions
+from configmate.base import exceptions, types
 
 T = TypeVar("T")
 T_contra = TypeVar("T_contra", contravariant=True)
 
 
-class DictRegistryMixin(Generic[T_contra, T]):
+class DictRegistryMixin(types.HasDescription, Generic[T_contra, T]):
     _registry: Dict[T_contra, T]
 
     def __init_subclass__(cls, *args, **kwargs) -> None:
@@ -26,8 +26,13 @@ class DictRegistryMixin(Generic[T_contra, T]):
         """Inserts a new strategy at the given rank (position in queue)."""
         cls._registry[key] = value
 
+    @classmethod
+    def describe(cls) -> str:
+        """Returns a string representation of all items in the registry."""
+        return "\n".join(f"{key}: {value}" for key, value in cls._registry.items())
 
-class StrategyRegistryMixin(Generic[T_contra, T]):
+
+class StrategyRegistryMixin(types.HasDescription, Generic[T_contra, T]):
     _registry: Deque[Tuple[Callable[[T_contra], bool], T]]
 
     def __init_subclass__(cls, *args, **kwargs) -> None:
@@ -48,9 +53,16 @@ class StrategyRegistryMixin(Generic[T_contra, T]):
         """Inserts a new strategy at the given rank (position in queue)."""
         cls._registry.insert(rank, (trigger, entry))
 
+    @classmethod
+    def describe(cls) -> str:
+        """Returns a string representation of all items in the registry."""
+        return "\n".join(
+            f"{entry[1]} (triggered by: {entry[0].__name__})" for entry in cls._registry
+        )
 
-def _raise_missing(self: object, unfound_key) -> NoReturn:
+
+def _raise_missing(cls: types.HasDescription, unfound_key: Any) -> NoReturn:
     raise exceptions.NoApplicableStrategy(
         f"Missing strategy for {unfound_key}, please register one."
-        f"\n\tAvailable strategies: "  # TODO describe _registry
+        f"\n\tAvailable strategies:\n{cls.describe()}"
     )

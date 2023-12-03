@@ -2,32 +2,35 @@
 name = "configmate"
 version = "0.1.0"
 description = "A universal configuration parser for Python."
-authors = ["arthur böök <atte.book@gmail.com>"]
+authors = ["arthur böök"]
 license = "Apache 2.0"
 readme = "README.md"
 packages = [{include = "src/configmate"}]
+include = ["LICENSE"]
+keywords = ["configuration", "config", "parser", "config-parser"]
 
+[tool.poetry.urls]
+repository = "https://github.com/ArthurBook/configmate"
 
 [tool.poetry.dependencies]
-python = "^3.8, <3.12"
+python = "^3.8"
 pyyaml = { version = "^6.0.1", optional = true }
 toml = {version = "^0.10.2", optional = true}
 pydantic = {version = "^2.3.0", optional = true}
-jinja2 = {version = "^3.1.2", optional = true}
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.9.1"
-mypy = "^1.5.1"
-pylint = "^2.17.5"
+mypy = "^1.7.1"
+pylint = "^3.0.2"
 pytest = "^7.4.2"
 tox = "^4.11.3"
 types-pyyaml = "^6.0.12.12"
 types-toml = "^0.10.8.7"
+isort = "^5.12.0"
 
 [tool.poetry.extras]
 yaml = ["pyyaml"]
 toml = ["toml"]
-jinja2 = ["jinja2"]
 pydantic = ["pydantic"]
 
 [build-system]

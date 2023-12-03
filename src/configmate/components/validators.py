@@ -1,10 +1,9 @@
 """ Generic flexible validation step usable in the pipeline
 """
 
-import pathlib
 from typing import Any, Callable, Type, TypeVar, Union
 
-from configmate.base import operators, registry, types
+from configmate.base import operators, registry
 
 T_co = TypeVar("T_co", covariant=True)
 T_contra = TypeVar("T_contra", contravariant=True)
@@ -25,10 +24,6 @@ ValidatorFactoryMethod = Callable[[SpecT_contra], TypeValidator[T_contra, T_co]]
 class TypeValidatorFactory(
     registry.StrategyRegistryMixin[ValidationSpec, ValidatorFactoryMethod]
 ):
-    @classmethod
-    def build_path_validator(cls) -> TypeValidator[types.FilePath, pathlib.Path]:
-        return cls.build_validator(pathlib.Path)
-
     @classmethod
     def build_validator(
         cls, key: ValidationSpec[T_contra, Union[T_co, Any]]

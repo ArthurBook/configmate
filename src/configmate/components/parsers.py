@@ -83,7 +83,7 @@ class FunctionParser(Parser[T_co]):
         return self._parser(input_)
 
 
-class InferredParser(Parser[Any], Generic[types.FilePathT]):
+class InferredParser(Parser[Any]):
     """A parser that infers the file format from the file extension."""
 
     infer_parser = staticmethod(FileFormatParserRegistry.infer_parser)

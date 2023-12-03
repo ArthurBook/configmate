@@ -1,7 +1,8 @@
 [MASTER]
 disable=
-    missing-docstring,
-    too-few-public-methods
+    missing-docstring, # we will get to this! :)
+    too-few-public-methods,
+    too-many-arguments
 
 [MESSAGES CONTROL]
 disable=
