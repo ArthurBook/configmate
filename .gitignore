@@ -160,3 +160,7 @@ cython_debug/
 #.idea/
 
 .vscode
+.python-version
+THOUGHTS.md
+logs
+.vimspector.json
