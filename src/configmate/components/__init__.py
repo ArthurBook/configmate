@@ -8,7 +8,6 @@ from configmate.components.aggregators import (
 )
 from configmate.components.cli_readers import (
     ArgSelector,
-    CliReaderFactory,
     CliSectionReader,
     KeyValueSelector,
 )

@@ -1,6 +1,7 @@
 import abc
 import collections
 import copy
+import itertools
 import types
 from typing import (
     Callable,
@@ -14,6 +15,7 @@ from typing import (
     TypeVar,
     overload,
 )
+from typing_extensions import Self
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -61,15 +63,15 @@ class Operator(abc.ABC, Generic[T_contra, T_co]):
         super().__init__()
         self._callbacks: List[Callback[T_co]] = []
 
-    def __call__(self, input_: T_contra, __ctx: Optional[Context] = None) -> T_co:
-        __ctx = Context() if __ctx is None else __ctx
-        result = self._transform(__ctx, input_)
-        self._run_callbacks(__ctx, result)
+    def __call__(self, input_: T_contra, _ctx: Optional[Context] = None) -> T_co:
+        _ctx = Context() if _ctx is None else _ctx
+        result = self._transform(_ctx, input_)
+        self._run_callbacks(_ctx, result)
         return result
 
     # fmt: off
     @overload
-    def pipe_to(self, step: None) -> "Operator[T_contra, T_co]": ...
+    def pipe_to(self, step: None) -> Self: ...
     @overload
     def pipe_to(self, step: "Operator[T_co, T]") -> "Pipeline[T_contra, T]": ...
     # fmt: on
@@ -83,20 +85,6 @@ class Operator(abc.ABC, Generic[T_contra, T_co]):
     def _run_callbacks(self, ctx: Context, result) -> None:
         for callback in self._callbacks:
             callback(ctx, result)
-
-
-class Broadcast(Operator[Iterable[T_contra], Iterator[T_co]]):
-    """Maps an ~Operator over an iterable."""
-
-    input_type = Iterable  # type: ignore
-    output_type = Iterator  # type: ignore
-
-    def __init__(self, map_step: Operator[T_contra, T_co]) -> None:
-        super().__init__()
-        self._map_step = map_step
-
-    def _transform(self, ctx: Context, input_: Iterable[T_contra]) -> Iterator[T_co]:
-        return (self._map_step(i, ctx.get_child()) for i in input_)
 
 
 class Pipeline(Operator[T_contra, T_co]):
@@ -117,3 +105,43 @@ class Pipeline(Operator[T_contra, T_co]):
     @property
     def output_type(self) -> Type[T_co]:  # type: ignore
         return self._next.output_type
+
+
+class MapIterable(Operator[Iterable[T_contra], Iterator[T_co]]):
+    """Maps an ~Operator over an iterable."""
+
+    input_type = Iterable  # type: ignore
+    output_type = Iterator  # type: ignore
+
+    def __init__(self, map_step: Operator[T_contra, T_co]) -> None:
+        super().__init__()
+        self._map_step = map_step
+
+    def _transform(self, ctx: Context, input_: Iterable[T_contra]) -> Iterator[T_co]:
+        return (self._map_step(i, ctx.get_child()) for i in input_)
+
+
+class JoinOutputs(Operator[T_contra, Iterator[T_co]]):
+    """Joins the outputs of multiple operators into a single iterable."""
+
+    output_type = Iterator  # type: ignore
+
+    def __init__(self, *steps: Operator[T_contra, T_co]) -> None:
+        super().__init__()
+        self._steps = steps
+
+    def _transform(self, ctx: Context, input_: T_contra) -> Iterator[T_co]:
+        return (step(input_, ctx.get_child()) for step in self._steps)
+
+
+class ChainOutputs(Operator[T_contra, Iterator[T_co]]):
+    """Chains multiple operators together."""
+
+    output_type = Iterator  # type: ignore
+
+    def __init__(self, steps: Operator[T_contra, Iterable[Iterable[T_co]]]) -> None:
+        super().__init__()
+        self._steps = steps
+
+    def _transform(self, ctx: Context, input_: T_contra) -> Iterator[T_co]:
+        return itertools.chain.from_iterable(self._steps(input_, ctx))
