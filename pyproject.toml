@@ -1,11 +1,11 @@
 [tool.poetry]
 name = "configmate"
-version = "0.1.0"
+version = "0.1.1"
 description = "A universal configuration parser for Python."
 authors = ["arthur böök"]
 license = "Apache 2.0"
 readme = "README.md"
-packages = [{include = "src/configmate"}]
+packages = [{include = "configmate", from = 'src'}]
 include = ["LICENSE"]
 keywords = ["configuration", "config", "parser", "config-parser"]
 
