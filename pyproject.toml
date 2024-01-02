@@ -14,6 +14,8 @@ repository = "https://github.com/ArthurBook/configmate"
 
 [tool.poetry.dependencies]
 python = "^3.8"
+pyyaml = "^6.0.1"
+toml = "^0.10.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.9.1"
