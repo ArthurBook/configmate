@@ -15,7 +15,6 @@ from typing import (
     TypeVar,
     overload,
 )
-from typing_extensions import Self
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -71,7 +70,7 @@ class Operator(abc.ABC, Generic[T_contra, T_co]):
 
     # fmt: off
     @overload
-    def pipe_to(self, step: None) -> Self: ...
+    def pipe_to(self, step: None) -> "Operator[T_contra, T_co]": ...
     @overload
     def pipe_to(self, step: "Operator[T_co, T]") -> "Pipeline[T_contra, T]": ...
     # fmt: on
