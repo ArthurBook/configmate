@@ -48,5 +48,5 @@ YAML_FILE = "test.yml"
 )
 def test_end_to_end(files: List[str], env: Dict[str, str], target: Any) -> None:
     with mock.patch.dict(os.environ, env, clear=True):
-        config = get_config(*files, validation=dict)
+        config: Dict[Any, Any] = get_config(*files, validation=dict)
         assert config == target, f"Expected {target}, got {config}"

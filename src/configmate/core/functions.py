@@ -1,3 +1,6 @@
+""" This module contains the core functions of configmate.
+.. autofunction:: configmate.core.functions.get_config
+"""
 import functools
 import itertools
 from typing import Any, Callable, Optional, TypeVar, Union, overload
@@ -15,8 +18,26 @@ from configmate.core import builders
 T = TypeVar("T")
 U = TypeVar("U")
 
-
 # fmt: off
+@overload
+def get_config( # if no validation is specified, we get the output of the aggregation
+    *config_files: types.FilePath,
+    ## file reading
+    interpolation: Optional[interpolators.InterpolatorSpec] = constants.ENVIRONMENT,
+    parsing: Union[types.Infer, parsers.ParsingSpec[U]] = constants.INFER_FROM_PATH,
+    section: Optional[selectors.SectionSelectionSpec] = None,
+    aggregation: Optional[str] = None,
+    validation: None = None,
+    ## CLI overlay options
+    cli_section_name: Optional[str] = None,
+    cli_section_end: Optional[str] = constants.CLI_SECTION_END_TOKEN,
+    cli_overlay_file_prefix: str = constants.CLI_OVERLAY_FILE_PREFIX,
+    cli_overlay_arg_key_prefix: str = constants.CLI_OVERLAY_KWARG_KEY_PREFIX,
+    cli_overlay_arg_key_delimiter: str = constants.CLI_OVERLAY_KWARG_KEY_DELIMITER,
+    cli_overlay_arg_parser: Callable[[str], Any] = constants.CLI_OVERLAY_KWARG_VAL_PARSER,
+    ## encoding
+    file_encoding: str = constants.SYS_DEFAULT_FILE_ENCODING,
+) -> U: ...
 @overload
 def get_config( # if no validation is specified, we get the output of the aggregation
     *config_files: types.FilePath,
@@ -55,7 +76,6 @@ def get_config( # the validation determines the return type
     ## encoding
     file_encoding: str = constants.SYS_DEFAULT_FILE_ENCODING,
 ) -> U: ...
-# fmt: on
 def get_config(  # pylint: disable=too-many-arguments,too-many-locals
     *config_files: types.FilePath,
     ## file reading
@@ -70,13 +90,43 @@ def get_config(  # pylint: disable=too-many-arguments,too-many-locals
     cli_overlay_file_prefix: str = constants.CLI_OVERLAY_FILE_PREFIX,
     cli_overlay_arg_key_prefix: str = constants.CLI_OVERLAY_KWARG_KEY_PREFIX,
     cli_overlay_arg_key_delimiter: str = constants.CLI_OVERLAY_KWARG_KEY_DELIMITER,
-    cli_overlay_arg_parser: Callable[
-        [str], Any
-    ] = constants.CLI_OVERLAY_KWARG_VAL_PARSER,
+    cli_overlay_arg_parser: Callable[[str], Any] = constants.CLI_OVERLAY_KWARG_VAL_PARSER,
     ## encoding
     file_encoding: str = constants.SYS_DEFAULT_FILE_ENCODING,
+# fmt: on
 ):
-    """Get the config from the given files, with the given options."""
+    '''Get the config from the given files and CLI arguments.
+    
+    Parameters
+    ----------
+    *config_files
+        The files to read the config from.
+    interpolation
+        The interpolation strategy to use.
+    parsing
+        The parsing strategy to use.
+    section
+        The section selection strategy to use.
+    aggregation
+        The aggregation strategy to use.
+    validation
+        The validation strategy to use.
+    cli_section_name
+        The name of the CLI section.
+    cli_section_end
+        The end token of the CLI section.
+    cli_overlay_file_prefix
+        The prefix of CLI overlay files.
+    cli_overlay_arg_key_prefix
+        The prefix of CLI overlay keyword arguments.
+    cli_overlay_arg_key_delimiter
+        The delimiter of CLI overlay keyword arguments.
+    cli_overlay_arg_parser
+        The parser of CLI overlay keyword arguments.
+    file_encoding
+        The encoding of the files.
+    '''
+
     file_processing_pipeline = builders.build_fileprocessor(
         interpolation=interpolation,
         parsing=parsing,

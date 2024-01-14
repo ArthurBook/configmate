@@ -35,7 +35,7 @@ def compose_file_processor(
     parser: operators.Operator[str, T],
     section_selector: Optional[operators.Operator[T, U]],
 ) -> Union[
-    operators.Pipeline[types.FilePath, T], operators.Pipeline[types.FilePath, U]
+    operators.Operator[types.FilePath, T], operators.Operator[types.FilePath, U]
 ]:
     return (
         path_validator.pipe_to(file_reader)  # reads in the file as a string

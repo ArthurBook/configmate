@@ -52,7 +52,7 @@ def build_fileprocessor(
     section: Optional[selectors.SectionSelectionSpec[T, U]] = None,
     file_encoding: str = constants.SYS_DEFAULT_FILE_ENCODING,
 ) -> Union[
-    operators.Pipeline[types.FilePath, T], operators.Pipeline[types.FilePath, U]
+    operators.Operator[types.FilePath, T], operators.Operator[types.FilePath, U]
 ]:
     return composers.compose_file_processor(
         path_validator=(path_factory := validators.FunctionValidator(pathlib.Path)),
