@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "configmate-yamlparser"
-version = "0.1.0"
+version = "0.1.2"
 description = "Extends configmate with YAML support"
 authors = ["Arthur Böök"]
 readme = "README.md"
@@ -8,9 +8,8 @@ packages = [{include = "configmate_plugins/yaml_parser"}]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-PyYAML = "^6.0.1"
-configmate = "^0.1.1"
-
+PyYAML = "*"
+configmate = "^0.1.4"
 
 [build-system]
 requires = ["poetry-core"]

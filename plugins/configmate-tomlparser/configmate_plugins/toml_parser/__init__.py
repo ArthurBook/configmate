@@ -1,3 +1,3 @@
 """ Toml parser plugin for configmate
 """
-from toml_parser import TomlParser
+from configmate_plugins.toml_parser.toml_parser import TomlParser

@@ -8,9 +8,6 @@ import pathlib
 from typing import Any, Callable, Dict, Generic, Literal, Type, TypeVar, Union
 from xml.etree import ElementTree as etree
 
-import toml
-import yaml
-
 from configmate.base import operators, registry, types
 
 T = TypeVar("T")
@@ -141,16 +138,6 @@ class XmlParser(Parser[Any]):
         }
 
 
-class YamlParser(Parser[Any]):
-    def _transform(self, ctx: operators.Context, input_: Any) -> Any:
-        return yaml.safe_load(input_)
-
-
-class TomlParser(Parser[Any]):
-    def _transform(self, ctx: operators.Context, input_: Any) -> Any:
-        return toml.loads(input_)
-
-
 ###
 # register default strategies
 ###
@@ -158,8 +145,6 @@ class TomlParser(Parser[Any]):
 FileFormatParserRegistry.add_strategy(JsonParser, ".json", ".JSON")
 FileFormatParserRegistry.add_strategy(IniParser, ".ini", ".INI")
 FileFormatParserRegistry.add_strategy(XmlParser, ".xml", ".XML")
-FileFormatParserRegistry.add_strategy(TomlParser, ".tml", ".toml", ".TML", ".TOML")
-FileFormatParserRegistry.add_strategy(YamlParser, '.yml', ".yaml", '.YML', ".YAML")
 
 ParserFactory.register(lambda spec: isinstance(spec, InferFrom), InferredParser)
 ParserFactory.register(callable, FunctionParser)
