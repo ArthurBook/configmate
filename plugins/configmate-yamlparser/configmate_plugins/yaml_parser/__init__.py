@@ -1,3 +1,3 @@
 """ Yaml parser plugin for configmate
 """
-from yaml_parser import YamlParser
+from configmate_plugins.yaml_parser.yaml_parser import YamlParser

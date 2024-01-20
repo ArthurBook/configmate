@@ -104,6 +104,36 @@ files = [
 ]
 
 [[package]]
+name = "configmate-tomlparser"
+version = "0.1.1"
+description = "Extends configmate with TOML support"
+optional = true
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "configmate_tomlparser-0.1.1-py3-none-any.whl", hash = "sha256:d409429d86c15ec055b4ddc80e556d4079b51f1a741789d2a59383df0cacc120"},
+    {file = "configmate_tomlparser-0.1.1.tar.gz", hash = "sha256:7f76ca7c049c742815906a4e73a90f7f21887dc27062a506873ac5f7fa85db3f"},
+]
+
+[package.dependencies]
+configmate = ">=0.1.3,<0.2.0"
+toml = "*"
+
+[[package]]
+name = "configmate-yamlparser"
+version = "0.1.1"
+description = "Extends configmate with YAML support"
+optional = true
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "configmate_yamlparser-0.1.1-py3-none-any.whl", hash = "sha256:c3b7ecbbcd2a6767a91d659d4735468f3fa9033a925bc9c55f2c3d7d970365c8"},
+    {file = "configmate_yamlparser-0.1.1.tar.gz", hash = "sha256:80aad9c7c81dcbdd2616154bd19da320a50a73997c6c6f9797efed2725421cd4"},
+]
+
+[package.dependencies]
+configmate = ">=0.1.3,<0.2.0"
+PyYAML = "*"
+
+[[package]]
 name = "dill"
 version = "0.3.7"
 description = "serialize all of Python"
@@ -382,7 +412,7 @@ testing = ["argcomplete", "attrs (>=19.2.0)", "hypothesis (>=3.56)", "mock", "no
 name = "pyyaml"
 version = "6.0.1"
 description = "YAML parser and emitter for Python"
-optional = false
+optional = true
 python-versions = ">=3.6"
 files = [
     {file = "PyYAML-6.0.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:d858aa552c999bc8a8d57426ed01e40bef403cd8ccdd0fc5f6f04a00414cac2a"},
@@ -441,7 +471,7 @@ files = [
 name = "toml"
 version = "0.10.2"
 description = "Python Library for Tom's Obvious, Minimal Language"
-optional = false
+optional = true
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 files = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
@@ -498,28 +528,6 @@ docs = ["furo (>=2023.8.19)", "sphinx (>=7.2.4)", "sphinx-argparse-cli (>=1.11.1
 testing = ["build[virtualenv] (>=0.10)", "covdefaults (>=2.3)", "detect-test-pollution (>=1.1.1)", "devpi-process (>=1)", "diff-cover (>=7.7)", "distlib (>=0.3.7)", "flaky (>=3.7)", "hatch-vcs (>=0.3)", "hatchling (>=1.18)", "psutil (>=5.9.5)", "pytest (>=7.4)", "pytest-cov (>=4.1)", "pytest-mock (>=3.11.1)", "pytest-xdist (>=3.3.1)", "re-assert (>=1.1)", "time-machine (>=2.12)", "wheel (>=0.41.2)"]
 
 [[package]]
-name = "types-pyyaml"
-version = "6.0.12.12"
-description = "Typing stubs for PyYAML"
-optional = false
-python-versions = "*"
-files = [
-    {file = "types-PyYAML-6.0.12.12.tar.gz", hash = "sha256:334373d392fde0fdf95af5c3f1661885fa10c52167b14593eb856289e1855062"},
-    {file = "types_PyYAML-6.0.12.12-py3-none-any.whl", hash = "sha256:c05bc6c158facb0676674b7f11fe3960db4f389718e19e62bd2b84d6205cfd24"},
-]
-
-[[package]]
-name = "types-toml"
-version = "0.10.8.7"
-description = "Typing stubs for toml"
-optional = false
-python-versions = "*"
-files = [
-    {file = "types-toml-0.10.8.7.tar.gz", hash = "sha256:58b0781c681e671ff0b5c0319309910689f4ab40e8a2431e205d70c94bb6efb1"},
-    {file = "types_toml-0.10.8.7-py3-none-any.whl", hash = "sha256:61951da6ad410794c97bec035d59376ce1cbf4453dc9b6f90477e81e4442d631"},
-]
-
-[[package]]
 name = "typing-extensions"
 version = "4.8.0"
 description = "Backported and Experimental Type Hints for Python 3.8+"
@@ -551,10 +559,10 @@ docs = ["furo (>=2023.7.26)", "proselint (>=0.13)", "sphinx (>=7.1.2)", "sphinx-
 test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess (>=1)", "flaky (>=3.7)", "packaging (>=23.1)", "pytest (>=7.4)", "pytest-env (>=0.8.2)", "pytest-freezer (>=0.4.8)", "pytest-mock (>=3.11.1)", "pytest-randomly (>=3.12)", "pytest-timeout (>=2.1)", "setuptools (>=68)", "time-machine (>=2.10)"]
 
 [extras]
-toml = []
-yaml = []
+toml = ["configmate-tomlparser"]
+yaml = ["configmate-yamlparser"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "8db9f220620288601134087c3c1f4ebd2a803b06318cb8c26eab4f65fcf94077"
+content-hash = "8ec8d65d222aade7eebf1988813f470843a9dca88e81f3bd37fcacd746047a8d"
