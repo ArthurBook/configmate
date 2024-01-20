@@ -2,19 +2,18 @@
 
 [[package]]
 name = "configmate"
-version = "0.1.1"
+version = "0.1.3"
 description = "A universal configuration parser for Python."
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "configmate-0.1.1-py3-none-any.whl", hash = "sha256:8ff2a85737715f682c7bd9bdd37d8211cb66d36e6a087d4a0394be30838cc7f5"},
-    {file = "configmate-0.1.1.tar.gz", hash = "sha256:dc9cef8089a95221f708a5f16bc25f2e28a6aa8ab4bda7085abaf8df03716c11"},
+    {file = "configmate-0.1.3-py3-none-any.whl", hash = "sha256:dcfebf6136a9018cdf67496f9d7b0ecad8448a31e9718e86e465df49fcbc8dda"},
+    {file = "configmate-0.1.3.tar.gz", hash = "sha256:59f7424546e4ba2569f89caf6a5bf9dd2faa782c2cf2911666a040652dc8d683"},
 ]
 
 [package.extras]
-pydantic = ["pydantic (>=2.3.0,<3.0.0)"]
-toml = ["toml (>=0.10.2,<0.11.0)"]
-yaml = ["pyyaml (>=6.0.1,<7.0.0)"]
+toml = ["configmate-tomlparser"]
+yaml = ["configmate-yamlparser"]
 
 [[package]]
 name = "pyyaml"
@@ -78,4 +77,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "d39cda5a99a87a998ead50e0912a5f95ecedf57e66fa1de95854505c0d1fa4ef"
+content-hash = "c56aa3b931da7a55ad2b461fff611df5dce0b7ecd7c55b4a1e8cc21da5afdae1"
