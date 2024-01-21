@@ -1,7 +1,7 @@
 """ Generic flexible aggregation step usable in the pipeline
 """
 import collections
-from typing import Callable, ChainMap, Iterable, Literal, Mapping, TypeVar, Union
+from typing import Callable, ChainMap, Dict, Iterable, Literal, Mapping, TypeVar, Union
 
 from configmate.base import exceptions, operators, registry
 
@@ -49,13 +49,13 @@ class FunctionAggregator(Aggregator[T_contra, T_co]):
         return self._method(input_)
 
 
-class OverlayAggregator(Aggregator[Mapping, ChainMap]):
-    output_type = ChainMap
+class OverlayAggregator(Aggregator[Mapping, Dict]):
+    output_type = Dict
 
-    def _transform(self, ctx: operators.Context, input_: Iterable[Mapping]) -> ChainMap:
+    def _transform(self, ctx: operators.Context, input_: Iterable[Mapping]) -> Dict:
         chainmap = self._make_chainmap(input_)
         chainmap.maps.reverse()  # last map has highest priority
-        return chainmap
+        return dict(chainmap)
 
     def _make_chainmap(self, configs: Iterable) -> collections.ChainMap:
         try:

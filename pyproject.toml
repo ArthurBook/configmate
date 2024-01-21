@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "configmate"
-version = "0.1.5"
+version = "0.1.6"
 description = "A universal configuration parser for Python."
 authors = ["Arthur Böök"]
 license = "Apache 2.0"
