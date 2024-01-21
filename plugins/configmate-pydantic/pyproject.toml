@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "configmate-pydantic-validator"
-version = "0.1.0"
+version = "0.0.1"
 description = "Extends configmate with pydantic validation logic."
 authors = ["Arthur Böök"]
 readme = "README.md"
