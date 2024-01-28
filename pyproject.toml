@@ -27,6 +27,10 @@ pytest = "^7.4.2"
 tox = "^4.11.3"
 isort = "^5.12.0"
 
+
+[tool.poetry.group.docs.dependencies]
+pygments = "^2.17.2"
+
 [tool.poetry.extras]
 yaml = ["configmate-yamlparser"]
 toml = ["configmate-tomlparser"]
