@@ -19,8 +19,7 @@
 
 ------------------------------------------------------------------------
 
-**ConfigMate** ... <DESC>
-Configure with confidence
+**ConfigMate** streamlines heavyweight config parsing into a sleek, zero-boilerplate experience that lets you configure with confidence.
 
 Key Features
 ---------------
@@ -30,24 +29,77 @@ Key Features
 - *CLI support*: Override configuration values with files or values dirctly from an automatically generated command line interface.
 - *Type validation*: - Custom validation support, and seamless extension for Pydantic's fantastic validation capabilities.
 
-Installation
----------------
+Get Started with ConfigMate
+-------------------------------
+
+ConfigMate simplifies your configuration management. Get started with these easy steps:
+
+**Installation**
+
+Install ConfigMate with all standard features:
+
 .. code-block:: bash
 
-    pip install configmate[all]
+    pip install "configmate[standard]"
 
-
-... or if you know what you need, you can install just that:
+Alternatively, install with specific features (e.g., Pydantic):
 
 .. code-block:: bash
 
-    pip install "configmate[pydantic,yaml]"
+    pip install "configmate[pydantic]"
 
+**Set Up Configuration**
 
+1. **Create a Configuration File:**
 
-Quick Tour
----------------
+   Define your database configuration in `config.yaml`:
 
+   .. code-block:: yaml
+
+        # config.yaml
+        Database configuration:
+            host: localhost
+            port: ${DB_PORT:8000}
+
+2. **Integrate with Your Script:**
+
+   Use ConfigMate to load and validate configuration in your script:
+
+   .. code-block:: python
+
+        # example.py
+        import configmate
+        import dataclasses
+
+        @dataclasses.dataclass
+        class DatabaseConfig:
+            host: str
+            port: int
+
+        config = configmate.get_config(
+            "config.yaml", 
+            section='Database configuration', 
+            validation=DatabaseConfig
+        )
+        print(config)
+
+**Run Your Script with Different Configurations**
+
+Execute your script, and override configurations using environment variables or command-line arguments:
+
+.. code-block:: bash
+
+    # Default configuration
+    python example.py 
+    >> DatabaseConfig(host='localhost', port=8000)
+
+    # Override port using an environment variable
+    DB_PORT=9000 python example.py
+    >> DatabaseConfig(host='localhost', port=9000)
+
+    # Override host using a command-line argument
+    python example.py ++host foreignhost
+    >> DatabaseConfig(host='foreignhost', port=8000)
 
 
 Quick comparison
