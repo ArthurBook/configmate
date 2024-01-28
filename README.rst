@@ -20,14 +20,15 @@
 ------------------------------------------------------------------------
 
 **ConfigMate** ... <DESC>
-Configurate with Confidence
+Configure with confidence
 
 Key Features
 ---------------
-- *Extensible file format support* - Automatic detection & parsing of all standard configuration file formats, customize with only necessary dependencies.
-- *Environment variable interpolation* - Automatically parse environment variables into configuration values while managing defaults in your configuration file.
-- *CLI support* - Automatically generate a CLI interface & provide overrides with files or values directly from the command line.
-- *Type validation* - Custom validation support, and seamless extension for Pydantic's fantastic validation capabilities.
+- *Extensible file format support*: - Automatic detection & parsing of all standard config file formats.
+- *Environment variable interpolation*: - Parse environment variables while keeping defaults in your configuration file.
+- *Override files*: Segregate base configuration management and DEV/STAG/PROD overrides in separate files.
+- *CLI support*: Override configuration values with files or values dirctly from an automatically generated command line interface.
+- *Type validation*: - Custom validation support, and seamless extension for Pydantic's fantastic validation capabilities.
 
 Installation
 ---------------
@@ -36,20 +37,102 @@ Installation
     pip install configmate[all]
 
 
-If you've already taken a look at the plugins, you can install only the ones you need:
+... or if you know what you need, you can install just that:
 
 .. code-block:: bash
 
-    pip install "configmate[json,pydantic]"
+    pip install "configmate[pydantic,yaml]"
 
 
 
 Quick Tour
 ---------------
 
-Why not...
----------------
-- configparser
-- json/toml/yaml fileparsers
-- argparse pallets/click google/fire
-- hydra
+
+
+Quick comparison
+----------------
+
+.. role:: centered
+   :class: centered
+
+.. role:: centered
+   :class: centered
+
+.. list-table::
+   :widths: 25 10 10 10 10 10 10 10 10
+   :header-rows: 1
+
+   * - Feature / package
+     - configmate
+     - configparser
+     - fileparsers (toml/yaml...)
+     - argparse
+     - pallets/click
+     - google/fire
+     - omegaconf
+     - hydra
+   * - No Boilerplate
+     - :centered:`✅`
+     - :centered:`❌`
+     - :centered:`✅`
+     - :centered:`❌`
+     - :centered:`❌`
+     - :centered:`✅`
+     - :centered:`❌`
+     - :centered:`✅`
+   * - Support for Multiple File Formats
+     - :centered:`✅`
+     - :centered:`❌`
+     - :centered:`✅`
+     - :centered:`❌`
+     - :centered:`❌`
+     - :centered:`❌`
+     - :centered:`❌`
+     - :centered:`❌`
+   * - Hierarchical Configuration
+     - :centered:`✅`
+     - :centered:`✅`
+     - :centered:`✅`
+     - :centered:`❌`
+     - :centered:`❌`
+     - :centered:`✅`
+     - :centered:`✅`
+     - :centered:`✅`
+   * - Command-line Interface (CLI) Support
+     - :centered:`✅`
+     - :centered:`❌`
+     - :centered:`❌`
+     - :centered:`✅`
+     - :centered:`✅`
+     - :centered:`✅`
+     - :centered:`❌`
+     - :centered:`✅`
+   * - Type Validation
+     - :centered:`✅`
+     - :centered:`❌`
+     - :centered:`Partial`
+     - :centered:`❌`
+     - :centered:`✅`
+     - :centered:`❌`
+     - :centered:`Partial`
+     - :centered:`Partial`
+   * - Environment Variable Interpolation
+     - :centered:`✅`
+     - :centered:`✅`
+     - :centered:`❌`
+     - :centered:`❌`
+     - :centered:`❌`
+     - :centered:`❌`
+     - :centered:`✅`
+     - :centered:`✅`
+   * - Dependency Count
+     - :centered:`Low`
+     - :centered:`Low`
+     - :centered:`Low`
+     - :centered:`Low`
+     - :centered:`Low`
+     - :centered:`Low`
+     - :centered:`Low`
+     - :centered:`Moderate`
+ 
