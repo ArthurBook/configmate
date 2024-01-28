@@ -2,7 +2,7 @@
 
     <p align="center">
         <a href="#readme">
-            <img alt="ConfigMate Logo" src="https://i.imgur.com/7DaKfnc.png" style="height: 60px;">
+            <img alt="ConfigMate Logo" src="https://i.imgur.com/7DaKfnc.png" style="height: 172px;">
         </a>
     </p>
     <h1 align="center" style="font-size: 2.5em; margin: 0; padding: 0;">ConfigMate</h1>
@@ -19,9 +19,15 @@
 
 ------------------------------------------------------------------------
 
-
 **ConfigMate** ... <DESC>
 Configurate with Confidence
+
+Key Features
+---------------
+- *Extensible file format support* - Automatic detection & parsing of all standard configuration file formats, customize with only necessary dependencies.
+- *Environment variable interpolation* - Automatically parse environment variables into configuration values while managing defaults in your configuration file.
+- *CLI support* - Automatically generate a CLI interface & provide overrides with files or values directly from the command line.
+- *Type validation* - Custom validation support, and seamless extension for Pydantic's fantastic validation capabilities.
 
 Installation
 ---------------
@@ -29,20 +35,13 @@ Installation
 
     pip install configmate[all]
 
+
+If you've already taken a look at the plugins, you can install only the ones you need:
+
+.. code-block:: bash
+
     pip install "configmate[json,pydantic]"
 
-If youv've already taken a look at the plugins, you can install only the ones you need:
-
-```bash
-pip install "configmate[json,pydantic]"
-```
-
-Key Features
----------------
-- *Extensible file format support* - Automatic detection & parsing of all standard configuration file formats, customize with only necessary dependencies.
-- *Environment variable support* - Automatically parse environment variables into configuration values while managing defaults in your configuration file.
-- *CLI support* - Automatically generate a CLI interface & provide overrides with files or values directly from the command line.
-- *Type validation* - Custom validation support, and seamless extension for Pydantic's fantastic validation capabilities.
 
 
 Quick Tour
