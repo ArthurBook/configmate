@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "configmate"
-version = "0.1.6"
-description = "A universal configuration parser for Python."
+version = "0.1.7a2"
+description = "Practical and versatile configuration parsing in Python."
 authors = ["Arthur Böök"]
 license = "Apache 2.0"
 readme = "README.md"
@@ -26,7 +26,11 @@ pytest = "^7.4.2"
 tox = "^4.11.3"
 isort = "^5.12.0"
 
+[tool.poetry.group.docs.dependencies]
+pygments = "^2.17.2"
+
 [tool.poetry.extras]
+standard = ["configmate-yamlparser", "configmate-pydantic-validator"]
 yaml = ["configmate-yamlparser"]
 toml = ["configmate-tomlparser"]
 pydantic = ["configmate-pydantic-validator"]
