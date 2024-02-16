@@ -1,6 +1,7 @@
 """ This module contains the core functions of configmate.
 .. autofunction:: configmate.core.functions.get_config
 """
+
 import functools
 import itertools
 from typing import Any, Callable, Optional, TypeVar, Union, overload
@@ -18,9 +19,9 @@ from configmate.core import builders
 T = TypeVar("T")
 U = TypeVar("U")
 
-# fmt: off
+
 @overload
-def get_config( # if no validation is specified, we get the output of the aggregation
+def get_config(  # if no validation is specified, we get the output of the aggregation
     *config_files: types.FilePath,
     ## file reading
     interpolation: Optional[interpolators.InterpolatorSpec] = constants.ENVIRONMENT,
@@ -34,12 +35,14 @@ def get_config( # if no validation is specified, we get the output of the aggreg
     cli_overlay_file_prefix: str = constants.CLI_OVERLAY_FILE_PREFIX,
     cli_overlay_arg_key_prefix: str = constants.CLI_OVERLAY_KWARG_KEY_PREFIX,
     cli_overlay_arg_key_delimiter: str = constants.CLI_OVERLAY_KWARG_KEY_DELIMITER,
-    cli_overlay_arg_parser: Callable[[str], Any] = constants.CLI_OVERLAY_KWARG_VAL_PARSER,
+    cli_overlay_arg_parser: Callable[
+        [str], Any
+    ] = constants.CLI_OVERLAY_KWARG_VAL_PARSER,
     ## encoding
     file_encoding: str = constants.SYS_DEFAULT_FILE_ENCODING,
 ) -> U: ...
-@overload
-def get_config( # if no validation is specified, we get the output of the aggregation
+@overload  # if no validation is specified, we get the output of the aggregation
+def get_config(
     *config_files: types.FilePath,
     ## file reading
     interpolation: Optional[interpolators.InterpolatorSpec] = constants.ENVIRONMENT,
@@ -53,12 +56,14 @@ def get_config( # if no validation is specified, we get the output of the aggreg
     cli_overlay_file_prefix: str = constants.CLI_OVERLAY_FILE_PREFIX,
     cli_overlay_arg_key_prefix: str = constants.CLI_OVERLAY_KWARG_KEY_PREFIX,
     cli_overlay_arg_key_delimiter: str = constants.CLI_OVERLAY_KWARG_KEY_DELIMITER,
-    cli_overlay_arg_parser: Callable[[str], Any] = constants.CLI_OVERLAY_KWARG_VAL_PARSER,
+    cli_overlay_arg_parser: Callable[
+        [str], Any
+    ] = constants.CLI_OVERLAY_KWARG_VAL_PARSER,
     ## encoding
     file_encoding: str = constants.SYS_DEFAULT_FILE_ENCODING,
 ) -> U: ...
-@overload
-def get_config( # the validation determines the return type
+@overload  # the validation determines the return type
+def get_config(
     *config_files: types.FilePath,
     ## file reading
     interpolation: Optional[interpolators.InterpolatorSpec] = constants.ENVIRONMENT,
@@ -72,7 +77,9 @@ def get_config( # the validation determines the return type
     cli_overlay_file_prefix: str = constants.CLI_OVERLAY_FILE_PREFIX,
     cli_overlay_arg_key_prefix: str = constants.CLI_OVERLAY_KWARG_KEY_PREFIX,
     cli_overlay_arg_key_delimiter: str = constants.CLI_OVERLAY_KWARG_KEY_DELIMITER,
-    cli_overlay_arg_parser: Callable[[str], Any] = constants.CLI_OVERLAY_KWARG_VAL_PARSER,
+    cli_overlay_arg_parser: Callable[
+        [str], Any
+    ] = constants.CLI_OVERLAY_KWARG_VAL_PARSER,
     ## encoding
     file_encoding: str = constants.SYS_DEFAULT_FILE_ENCODING,
 ) -> U: ...
@@ -90,13 +97,14 @@ def get_config(  # pylint: disable=too-many-arguments,too-many-locals
     cli_overlay_file_prefix: str = constants.CLI_OVERLAY_FILE_PREFIX,
     cli_overlay_arg_key_prefix: str = constants.CLI_OVERLAY_KWARG_KEY_PREFIX,
     cli_overlay_arg_key_delimiter: str = constants.CLI_OVERLAY_KWARG_KEY_DELIMITER,
-    cli_overlay_arg_parser: Callable[[str], Any] = constants.CLI_OVERLAY_KWARG_VAL_PARSER,
+    cli_overlay_arg_parser: Callable[
+        [str], Any
+    ] = constants.CLI_OVERLAY_KWARG_VAL_PARSER,
     ## encoding
     file_encoding: str = constants.SYS_DEFAULT_FILE_ENCODING,
-# fmt: on
 ):
-    '''Get the config from the given files and CLI arguments.
-    
+    """Get the config from the given files and CLI arguments.
+
     Parameters
     ----------
     *config_files
@@ -125,7 +133,7 @@ def get_config(  # pylint: disable=too-many-arguments,too-many-locals
         The parser of CLI overlay keyword arguments.
     file_encoding
         The encoding of the files.
-    '''
+    """
 
     file_processing_pipeline = builders.build_fileprocessor(
         interpolation=interpolation,

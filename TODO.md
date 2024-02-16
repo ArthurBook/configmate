@@ -1,4 +1,7 @@
-# code quality -> A
-# Handling options for env var missing env vars
-# aggregators should handle all types
-# docs should be added
+# TODO List
+
+- [x] Codacy Code quality -> A
+- [ ] Handling options for missing environment variables
+- [ ] Aggregators should handle all types
+- [ ] Documentation should be added
+- [ ] Clean `get_config` overloads

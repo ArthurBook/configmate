@@ -1,5 +1,6 @@
 """ Generic flexible interpolation steps usable in the pipeline
 """
+
 import contextlib
 import re
 from typing import Callable, Iterable, Mapping, Set, TypeVar, Union
@@ -96,8 +97,14 @@ class InterpolatorChain(StringInterpolator):
 ###
 # register concrete interpolation steps in order of preference
 ###
-# fmt: off
+def is_mapping(s: InterpolatorSpec) -> bool:
+    return isinstance(s, Mapping)
+
+
+def is_iterable(s: InterpolatorSpec) -> bool:
+    return isinstance(s, Iterable)
+
+
 InterpolatorFactory.register(callable, FunctionalInterpolator)
-InterpolatorFactory.register(lambda s: isinstance(s, Mapping), VariableInterpolator)
-InterpolatorFactory.register(lambda s: isinstance(s, Iterable), InterpolatorChain.from_factory)
-# fmt: on
+InterpolatorFactory.register(is_mapping, VariableInterpolator)
+InterpolatorFactory.register(is_iterable, InterpolatorChain.from_factory)

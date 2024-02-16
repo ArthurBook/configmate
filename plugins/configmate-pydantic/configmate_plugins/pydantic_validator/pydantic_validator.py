@@ -33,7 +33,7 @@ def validate_with_pydantic(type_: Type[T], obj: Any) -> T:
 # Register the validator with configmate
 ###
 def is_not_function(obj: Any) -> bool:
-    return type(obj) != type(lambda: None)
+    return not isinstance(obj, type(is_not_function))
 
 
 validators.TypeValidatorFactory.register(is_not_function, PydanticValidator, rank=0)

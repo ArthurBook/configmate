@@ -1,5 +1,6 @@
 """This is a plugin for configmate that adds support for TOML files.
 """
+
 from typing import Any
 
 import toml
