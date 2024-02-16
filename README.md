@@ -15,17 +15,17 @@
     <a href="https://github.com/ArthurBook/configmate/blob/master/LICENSE"><img alt="License" src="https://img.shields.io/github/license/ArthurBook/configmate"></a>
 </p>
 
----
+***
 
 **ConfigMate** streamlines heavyweight config parsing into a sleek, zero-boilerplate experience that lets you configure with confidence.
 
 ## Key Features
 
-- *Extensible file format support*: Automatic detection & parsing of all standard config file formats.
-- *Environment variable interpolation*: Parse environment variables while keeping defaults in your configuration file.
-- *Override files*: Segregate base configuration management and DEV/STAG/PROD overrides in separate files.
-- *CLI support*: Override configuration values with files or values directly from an automatically generated command line interface.
-- *Type validation*: Custom validation support, and seamless extension for Pydantic's fantastic validation capabilities.
+* *Extensible file format support*: Automatic detection & parsing of all standard config file formats.
+* *Environment variable interpolation*: Parse environment variables while keeping defaults in your configuration file.
+* *Override files*: Segregate base configuration management and DEV/STAG/PROD overrides in separate files.
+* *CLI support*: Override configuration values with files or values directly from an automatically generated command line interface.
+* *Type validation*: Custom validation support, and seamless extension for Pydantic's fantastic validation capabilities.
 
 ## Get Started with ConfigMate
 
@@ -40,13 +40,15 @@ pip install "configmate[standard]"
 ```
 
 Alternatively, install with specific features (e.g., Pydantic):
+
 ```bash
 pip install "configmate[pydantic]"
 ```
 
 #### Set Up Configuration
+
 1. Create a Configuration File:
-In this example we will do YAML, but ConfigMate supports all standard config file formats(json, toml, ini - you name it):
+   In this example we will do YAML, but ConfigMate supports all standard config file formats(json, toml, ini - you name it):
 
 ```yaml
 # config.yaml
@@ -56,7 +58,8 @@ Database configuration:
 ```
 
 2. Load your config in python:
-Use ConfigMate to load and validate configuration in your script:
+   Use ConfigMate to load and validate configuration in your script:
+
 ```python
 # example.py
 import configmate
@@ -76,7 +79,7 @@ print(config)
 ```
 
 3. Run Your Script with Different Configurations
-Execute your script, and override configurations using environment variables or command-line arguments:
+   Execute your script, and override configurations using environment variables or command-line arguments:
 
 ```bash
 # Default configuration
@@ -93,8 +96,9 @@ python example.py ++host foreignhost
 ```
 
 ## Quick comparison with other config parsers
+
 | Feature / Package                     | ConfigMate | ConfigParser | File Parsers (TOML/YAML/...) | ArgParse | Pallets/Click | Google/Fire | OmegaConf | Hydra |
-|---------------------------------------|:----------:|:------------:|:---------------------------:|:--------:|:-------------:|:-----------:|:---------:|:-----:|  
+|---------------------------------------|:----------:|:------------:|:---------------------------:|:--------:|:-------------:|:-----------:|:---------:|:-----:|\
 | No Boilerplate                        |     ✅     |      ❌      |              ✅             |    ❌    |      ❌       |     ✅      |    ❌     |  ✅   |
 | Support for Multiple File Formats     |     ✅     |      ❌      |              ✅             |    ❌    |      ❌       |     ❌      |    ❌     |  ❌   |
 | Hierarchical Configuration            |     ✅     |      ✅      |              ✅             |    ❌    |      ❌       |     ✅      |    ✅     |  ✅   |
