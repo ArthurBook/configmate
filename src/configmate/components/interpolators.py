@@ -1,14 +1,18 @@
 """ Generic flexible interpolation steps usable in the pipeline
 """
 
-import contextlib
 import re
-from typing import Callable, Iterable, Mapping, Set, TypeVar, Union
+from typing import Callable, Iterable, Literal, Mapping, Set, TypeVar, Union, get_args
+import warnings
 
-from configmate.base import constants, operators, registry
+from configmate.base import constants, exceptions, operators, registry
+
+OnMissingSpec = Literal["error", "ignore", "warn"]
+ON_MISSING_KEYS: Set[str] = set(get_args(OnMissingSpec))
 
 InterpolatorSpec = Union[
     Callable[[str], str],
+    OnMissingSpec,
     Mapping[str, str],
     Iterable["InterpolatorSpec"],
 ]
@@ -48,14 +52,35 @@ class FunctionalInterpolator(StringInterpolator):
 
 
 class VariableInterpolator(StringInterpolator):
+    ###
+    # handlers for missing environment variables
+    ###
+    @staticmethod
+    def _throw_error_on_missing(missing_vars: Set[str]) -> None:
+        err_str = f"Missing environment variables: {missing_vars}"
+        raise exceptions.MissingEnvironmentVariable(err_str)
+
+    @staticmethod
+    def _warn_on_missing(missing_vars: Set[str]) -> None:
+        warnings.warn(f"Missing environment variables: {missing_vars}")
+
+    @staticmethod
+    def _ignore_on_missing(missing_vars: Set[str]) -> None:
+        del missing_vars
+
+    ###
+    #
+    ###
     def __init__(
         self,
-        substitutions: Mapping[str, str] = constants.ENVIRONMENT,
         pattern: re.Pattern = constants.BASH_VAR_PATTERN,
+        substitutions: Mapping[str, str] = constants.ENVIRONMENT,
+        missing_env_var_handler: Callable[[Set[str]], None] = _throw_error_on_missing,
     ) -> None:
         super().__init__()
-        self._substitutions = substitutions
         self._sub_pattern = pattern
+        self._substitutions = substitutions
+        self._on_missing = missing_env_var_handler
 
     def _transform(self, ctx: operators.Context, input_: str) -> str:
         missing_vars: Set[str] = set()
@@ -63,13 +88,42 @@ class VariableInterpolator(StringInterpolator):
         def replacer(match: re.Match) -> str:
             nonlocal missing_vars
             env_var_name = match.group("variable")
-            with contextlib.suppress(KeyError):
-                return self._substitutions[env_var_name]
+            if (value := self._substitutions.get(env_var_name)) is not None:
+                return value
+            if (default := match.group("default_value")) is not None:
+                return default
             missing_vars.add(env_var_name)
-            return match.group("default_value") or match.group(0)
+            return match.group(0)
 
-        ctx[self].missing_vars = missing_vars
-        return self._sub_pattern.sub(replacer, input_)
+        subbed_text = self._sub_pattern.sub(replacer, input_)
+        if missing_vars:
+            self._on_missing(missing_vars)
+
+        return subbed_text
+
+    @classmethod
+    def from_sub_mapping(
+        cls,
+        substitutions: Mapping[str, str],
+        on_missing: Callable[[Set[str]], None] = _throw_error_on_missing,
+        pattern: re.Pattern = constants.BASH_VAR_PATTERN,
+    ) -> "VariableInterpolator":
+        return cls(pattern, substitutions, on_missing)
+
+    @classmethod
+    def from_on_missing(
+        cls,
+        on_missing: OnMissingSpec,
+        substitutions: Mapping[str, str] = constants.ENVIRONMENT,
+        pattern: re.Pattern = constants.BASH_VAR_PATTERN,
+    ) -> "VariableInterpolator":
+        if on_missing == "error":
+            return cls(pattern, substitutions, cls._throw_error_on_missing)
+        if on_missing == "warn":
+            return cls(pattern, substitutions, cls._warn_on_missing)
+        if on_missing == "ignore":
+            return cls(pattern, substitutions, cls._ignore_on_missing)
+        raise ValueError(f"Unknown on_missing value: {on_missing}")
 
 
 class InterpolatorChain(StringInterpolator):
@@ -97,6 +151,10 @@ class InterpolatorChain(StringInterpolator):
 ###
 # register concrete interpolation steps in order of preference
 ###
+def is_on_missing_spec(spec: InterpolatorSpec) -> bool:
+    return isinstance(spec, str) and spec in ON_MISSING_KEYS
+
+
 def is_mapping(s: InterpolatorSpec) -> bool:
     return isinstance(s, Mapping)
 
@@ -106,5 +164,6 @@ def is_iterable(s: InterpolatorSpec) -> bool:
 
 
 InterpolatorFactory.register(callable, FunctionalInterpolator)
-InterpolatorFactory.register(is_mapping, VariableInterpolator)
+InterpolatorFactory.register(is_on_missing_spec, VariableInterpolator.from_on_missing)
+InterpolatorFactory.register(is_mapping, VariableInterpolator.from_sub_mapping)
 InterpolatorFactory.register(is_iterable, InterpolatorChain.from_factory)
