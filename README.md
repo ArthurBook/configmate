@@ -17,7 +17,7 @@
 
 ***
 
-<p><strong>ConfigMate</strong> streamlines heavyweight config parsing into a sleek, 
+<p><strong>ConfigMate</strong> streamlines heavyweight config parsing into a sleek,
 zero-boilerplate experience that lets you configure with confidence.</p>
 
 <h2>Key Features</h2>

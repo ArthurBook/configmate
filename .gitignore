@@ -164,3 +164,8 @@ cython_debug/
 THOUGHTS.md
 logs
 .vimspector.json
+
+
+package-lock.json
+package.json
+node_modules
