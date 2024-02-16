@@ -1,11 +1,12 @@
 import os
-import pytest
-from typing import Dict, Any, Type
+from typing import Any, Dict, Type
 from unittest import mock
 
+import pytest
+
+from configmate.base import exceptions
 from configmate.components import interpolators
 from configmate.core import functions
-from configmate.base import exceptions
 
 TEST_FILE_FOLDER = "tests/test_files/"
 FILE = "test_missing.json"
