@@ -68,12 +68,10 @@ class Operator(abc.ABC, Generic[T_contra, T_co]):
         self._run_callbacks(_ctx, result)
         return result
 
-    # fmt: off
     @overload
     def pipe_to(self, step: None) -> "Operator[T_contra, T_co]": ...
     @overload
     def pipe_to(self, step: "Operator[T_co, T]") -> "Pipeline[T_contra, T]": ...
-    # fmt: on
     def pipe_to(self, step: "Optional[Operator]") -> "Operator":
         return self if step is None else Pipeline(self, step)
 

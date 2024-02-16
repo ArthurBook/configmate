@@ -18,12 +18,12 @@ class DataClass:
     b: int
 
 
-def function_validator(input_: Any) -> DataClass:
+def function_validator(_: Any) -> DataClass:
     """This should not trigger the factory to validate with pydantic."""
     return DataClass(a=1, b=2)
 
 
-lambda_function_validator = lambda x: DataClass(a=1, b=2)
+lambda_function_validator = lambda x: DataClass(a=1, b=2)  # noqa
 ###
 # Tests
 ###
@@ -64,7 +64,9 @@ def test_modified_factory(
     type_: Type[T],
     expected: T,
 ) -> None:
-    """Test that the factory method for the PydanticValidator works as expected after adding the plugin"""
+    """Test that the factory method for the PydanticValidator works
+    as intended after adding the plugin
+    """
     validator = validators.TypeValidatorFactory.build_validator(type_)
     validated_obj = validator(input_)
     assert validated_obj == expected

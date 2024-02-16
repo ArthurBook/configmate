@@ -1,7 +1,8 @@
 """ Generic flexible aggregation step usable in the pipeline
 """
+
 import collections
-from typing import Callable, ChainMap, Dict, Iterable, Literal, Mapping, TypeVar, Union
+from typing import Callable, Dict, Iterable, Literal, Mapping, TypeVar, Union
 
 from configmate.base import exceptions, operators, registry
 

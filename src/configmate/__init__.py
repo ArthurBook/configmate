@@ -1,7 +1,10 @@
 """
 TODO: docs
 """
-from configmate.core.functions import get_config, configure
+
+from configmate.core.functions import configure, get_config
+
+__all__ = ["configure", "get_config"]
 
 ###
 # Loads all plugins from the configmate_plugins package
@@ -17,5 +20,5 @@ else:
     import pkgutil
 
     ## Load all plugins
-    for plugin in pkgutil.iter_modules(configmate_plugins.__path__):
-        importlib.import_module(f"{configmate_plugins.__name__}.{plugin.name}")
+    for plugin in pkgutil.iter_modules(configmate_plugins.__path__):  # type: ignore
+        importlib.import_module(f"{configmate_plugins.__name__}.{plugin.name}")  # type: ignore

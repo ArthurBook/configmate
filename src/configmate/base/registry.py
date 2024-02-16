@@ -11,7 +11,7 @@ class DictRegistryMixin(types.HasDescription, Generic[T_contra, T]):
     _registry: Dict[T_contra, T]
 
     def __init_subclass__(cls, *args, **kwargs) -> None:
-        cls._registry = {}
+        cls._registry: Dict[T_contra, T] = {}
         return super().__init_subclass__(*args, **kwargs)
 
     @classmethod

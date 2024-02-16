@@ -1,8 +1,10 @@
 import os
 from typing import Any, Dict, List
-import pytest
-from configmate import get_config
 from unittest import mock
+
+import pytest
+
+from configmate import get_config
 
 TEST_FILE_FOLDER = "./tests/test_files/"
 JSON_FILE = "test.json"

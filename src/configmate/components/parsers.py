@@ -1,5 +1,6 @@
 """ Parsing steps for the pipeline
 """
+
 import configparser
 import dataclasses
 import json
@@ -18,8 +19,7 @@ SpecT_co = TypeVar("SpecT_co", bound="ParsingSpec", covariant=True)
 ###
 # Parser base class
 ###
-class Parser(operators.Operator[Any, T_co], Generic[T_co]):
-    ...
+class Parser(operators.Operator[Any, T_co], Generic[T_co]): ...
 
 
 @dataclasses.dataclass
@@ -131,9 +131,11 @@ class XmlParser(Parser[Any]):
         if not (children := list(element)):
             return element.text
         return {
-            child.tag: child.text
-            if not list(child)
-            else XmlParser._convert_etree_to_dict(child)
+            child.tag: (
+                child.text
+                if not list(child)
+                else XmlParser._convert_etree_to_dict(child)
+            )
             for child in children
         }
 
@@ -141,12 +143,19 @@ class XmlParser(Parser[Any]):
 ###
 # register default strategies
 ###
-# fmt: off
 FileFormatParserRegistry.add_strategy(JsonParser, ".json", ".JSON")
 FileFormatParserRegistry.add_strategy(IniParser, ".ini", ".INI")
 FileFormatParserRegistry.add_strategy(XmlParser, ".xml", ".XML")
 
-ParserFactory.register(lambda spec: isinstance(spec, InferFrom), InferredParser)
+
+def is_inferred_from(spec: ParsingSpec) -> bool:
+    return isinstance(spec, InferFrom)
+
+
+def is_string(spec: ParsingSpec) -> bool:
+    return isinstance(spec, str)
+
+
+ParserFactory.register(is_inferred_from, InferredParser)
 ParserFactory.register(callable, FunctionParser)
-ParserFactory.register(lambda spec: isinstance(spec, str), FileFormatParserRegistry.infer_parser)
-# fmt: on
+ParserFactory.register(is_string, FileFormatParserRegistry.infer_parser)

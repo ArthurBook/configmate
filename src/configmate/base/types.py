@@ -9,15 +9,22 @@ FilePath = Union[str, os.PathLike, pathlib.Path]
 CliArgs = Sequence[str]
 NestedDict = Mapping[str, Union[T, "NestedDict[T]"]]
 
-# fmt: off
-class Unset: 'Used to mark a value that will be set.'
-class Infer: 'Marks a value that is inferred during runtime.'
-class Sentinel: 'Used to catch exhausted iterators.'
+
+class Unset:
+    "Used to mark a value that will be set."
+
+
+class Infer:
+    "Marks a value that is inferred during runtime."
+
+
+class Sentinel:
+    "Used to catch exhausted iterators."
+
+
 SENTINEL = Sentinel()
-# fmt: on
 
 
 class HasDescription(Protocol):
     @classmethod
-    def describe(cls) -> str:
-        ...
+    def describe(cls) -> str: ...
