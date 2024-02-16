@@ -17,17 +17,29 @@
 
 ***
 
-**ConfigMate** streamlines heavyweight config parsing into a sleek, zero-boilerplate experience that lets you configure with confidence.
+<p><strong>ConfigMate</strong> streamlines heavyweight config parsing into a sleek, 
+zero-boilerplate experience that lets you configure with confidence.</p>
 
-## Key Features
+<h2>Key Features</h2>
 
-* *Extensible file format support*: Automatic detection & parsing of all standard config file formats.
-* *Environment variable interpolation*: Parse environment variables while keeping defaults in your configuration file.
-* *Override files*: Segregate base configuration management and DEV/STAG/PROD overrides in separate files.
-* *CLI support*: Override configuration values with files or values directly from an automatically generated command line interface.
-* *Type validation*: Custom validation support, and seamless extension for Pydantic's fantastic validation capabilities.
+<ul>
+  <li><strong>Extensible file format support</strong>: Automatic detection &amp; 
+  parsing of all standard config file formats.</li>
 
-## Get Started with ConfigMate
+  <li><strong>Environment variable interpolation</strong>: Parse environment 
+  variables while keeping defaults in your configuration file.</li>
+
+  <li><strong>Override files</strong>: Segregate base configuration management 
+  such as DEV/STAG/PROD overrides in separate files.</li>
+
+  <li><strong>CLI support</strong>: Override configuration values with files 
+  or values directly from an automatically generated command line interface.</li>
+
+  <li><strong>Type validation</strong>: Custom validation support, and seamless 
+  extension for Pydantic's fantastic validation capabilities.</li>
+</ul>
+
+## Get started with ConfigMate
 
 ConfigMate simplifies your configuration management. Get started with these easy steps:
 
