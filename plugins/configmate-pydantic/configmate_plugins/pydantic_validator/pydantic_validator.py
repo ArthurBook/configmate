@@ -36,5 +36,9 @@ def is_not_function(obj: Any) -> bool:
     return not isinstance(obj, type(is_not_function))
 
 
-validators.TypeValidatorFactory.register(is_not_function, PydanticValidator, rank=0)
+validators.TypeValidatorFactory.register(
+    is_not_function,
+    PydanticValidator,
+    where="first",
+)
 ## NOTE: we want this to trigger for everything except functions

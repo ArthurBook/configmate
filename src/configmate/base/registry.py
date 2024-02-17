@@ -1,5 +1,15 @@
 import collections
-from typing import Any, Callable, Deque, Dict, Generic, NoReturn, Tuple, TypeVar
+from typing import (
+    Any,
+    Callable,
+    Deque,
+    Dict,
+    Generic,
+    Literal,
+    NoReturn,
+    Tuple,
+    TypeVar,
+)
 
 from configmate.base import exceptions, types
 
@@ -48,10 +58,18 @@ class StrategyRegistryMixin(types.HasDescription, Generic[T_contra, T]):
 
     @classmethod
     def register(
-        cls, trigger: Callable[[T_contra], bool], entry: T, rank: int = -1
+        cls,
+        trigger: Callable[[T_contra], bool],
+        entry: T,
+        where: Literal["first", "last"] = "last",
     ) -> None:
         """Inserts a new strategy at the given rank (position in queue)."""
-        cls._registry.insert(rank, (trigger, entry))
+        if where == "first":
+            cls._registry.appendleft((trigger, entry))
+        elif where == "last":
+            cls._registry.append((trigger, entry))
+        else:
+            raise ValueError(f"Invalid rank: {where}")
 
     @classmethod
     def describe(cls) -> str:
