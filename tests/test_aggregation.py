@@ -1,5 +1,5 @@
 import pytest
-from configmate.base import exceptions, operators
+from configmate.base import exceptions
 from configmate.components import aggregators
 
 
