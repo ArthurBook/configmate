@@ -5,7 +5,7 @@ from configmate.components.aggregators import (
     AggregationSpec,
     AggregatorFactory,
     FunctionAggregator,
-    OverlayAggregator,
+    InferredAggregator,
 )
 from configmate.components.cli_readers import (
     ArgSelector,
@@ -49,7 +49,7 @@ __all__ = [
     "AggregationSpec",
     "AggregatorFactory",
     "FunctionAggregator",
-    "OverlayAggregator",
+    "InferredAggregator",
     ## interpolators
     "FunctionalInterpolator",
     "InterpolatorChain",

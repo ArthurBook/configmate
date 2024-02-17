@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "configmate"
-version = "0.1.7"
+version = "0.1.8"
 description = "Practical and versatile configuration parsing in Python."
 authors = ["Arthur Böök"]
 license = "Apache 2.0"
@@ -16,7 +16,7 @@ repository = "https://github.com/ArthurBook/configmate"
 python = "^3.8"
 configmate-yamlparser = { version = "*", optional = true }
 configmate-tomlparser = { version = "*", optional = true }
-configmate-pydantic-validator = { version = "*", optional = true }
+configmate-pydantic-validator = { version = "^0.1.0", optional = true }
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.9.1"

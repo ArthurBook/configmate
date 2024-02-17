@@ -1,5 +1,6 @@
 """ Generic flexible aggregation step usable in the pipeline
 """
+
 import functools
 
 from typing import Any, Callable, NoReturn, Sequence, TypeVar, Union
@@ -62,7 +63,9 @@ class KeySelector(SectionSelector):
 ###
 # register strategies in order of priority
 ###
-# fmt: off
+def is_sequence_or_string(spec: Any) -> bool:
+    return isinstance(spec, (Sequence, str))
+
+
 SectionSelectorFactory.register(callable, FunctionSectionSelector)
-SectionSelectorFactory.register(lambda spec: isinstance(spec, (Sequence, str)), KeySelector)
-# fmt: on
+SectionSelectorFactory.register(is_sequence_or_string, KeySelector)
