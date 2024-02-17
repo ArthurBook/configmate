@@ -23,19 +23,19 @@ zero-boilerplate experience that lets you configure with confidence.</p>
 <h2>Key Features</h2>
 
 <ul>
-  <li><strong>Extensible file format support</strong>: Automatic detection &amp; 
+  <li><strong>Extensible file format support</strong>: Automatic detection &amp;
   parsing of all standard config file formats.</li>
 
-  <li><strong>Environment variable interpolation</strong>: Parse environment 
+  <li><strong>Environment variable interpolation</strong>: Parse environment
   variables while keeping defaults in your configuration file.</li>
 
-  <li><strong>Override files</strong>: Segregate base configuration management 
+  <li><strong>Override files</strong>: Segregate base configuration management
   such as DEV/STAG/PROD overrides in separate files.</li>
 
-  <li><strong>CLI support</strong>: Override configuration values with files 
+  <li><strong>CLI support</strong>: Override configuration values with files
   or values directly from an automatically generated command line interface.</li>
 
-  <li><strong>Type validation</strong>: Custom validation support, and seamless 
+  <li><strong>Type validation</strong>: Custom validation support, and seamless
   extension for Pydantic's fantastic validation capabilities.</li>
 </ul>
 
@@ -110,7 +110,7 @@ python example.py ++host foreignhost
 ## Quick comparison with other config parsers
 
 | Feature / Package                     | ConfigMate | ConfigParser | File Parsers (TOML/YAML/...) | ArgParse | Pallets/Click | Google/Fire | OmegaConf | Hydra |
-|---------------------------------------|:----------:|:------------:|:---------------------------:|:--------:|:-------------:|:-----------:|:---------:|:-----:|\
+|---------------------------------------|:----------:|:------------:|:---------------------------:|:--------:|:-------------:|:-----------:|:---------:|:-----:|
 | No Boilerplate                        |     ✅     |      ❌      |              ✅             |    ❌    |      ❌       |     ✅      |    ❌     |  ✅   |
 | Support for Multiple File Formats     |     ✅     |      ❌      |              ✅             |    ❌    |      ❌       |     ❌      |    ❌     |  ❌   |
 | Hierarchical Configuration            |     ✅     |      ✅      |              ✅             |    ❌    |      ❌       |     ✅      |    ✅     |  ✅   |
